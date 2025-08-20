@@ -1,39 +1,39 @@
 <script>
-import axios from 'axios'
+import axios from "axios";
 export default {
   name: "FeedBack",
   data() {
     return {
-      search: '', // Поле для хранения текста поиска
+      search: "", // Поле для хранения текста поиска
       cards: [],
     };
   },
   methods: {
     async fetchUsers() {
-      const url = "/feedbacks"; 
+      const url = "/feedbacks";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
-        console.log(response)
-        this.cards = response.data.feedbacks; 
+        console.log(response);
+        this.cards = response.data.feedbacks;
 
         for (let i = 0; i < this.cards.length; i++) {
-          if (this.cards[i].state === 'wait') {
-            this.cards[i].state = 'Ожидает';
-          } else if (this.cards[i].state === 'done') {
-            this.cards[i].state = 'Обработанные';
+          if (this.cards[i].state === "wait") {
+            this.cards[i].state = "Ожидает";
+          } else if (this.cards[i].state === "close") {
+            this.cards[i].state = "Закрыт";
           }
         }
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     },
-    open(cardId, userid) {
+    open(cardId) {
       try {
-        this.$router.push({ name: "FeedBackuser", params: {id: cardId, userid: userid} });
+        this.$router.push({ name: "feedbackuser", params: { id: cardId } });
       } catch (err) {
         console.log(err);
       }
@@ -42,7 +42,7 @@ export default {
   computed: {
     filteredCards() {
       // Фильтрация карточек по имени пользователя и номеру телефона
-      return this.cards.filter(card => {
+      return this.cards.filter((card) => {
         return (
           card.name.toLowerCase().includes(this.search.toLowerCase()) ||
           card.phone.includes(this.search) // Учитываем, что номер телефона может быть числом
@@ -52,7 +52,7 @@ export default {
   },
   mounted() {
     this.fetchUsers();
-  }
+  },
 };
 </script>
 
@@ -72,8 +72,14 @@ export default {
       <span>Создано</span>
       <span class="options-field"></span>
     </div>
-    <div class="cards" >
-      <div class="card" v-for="card in filteredCards" :key="card.id" @click="go(card.id, card.user.id)"> <!-- Используется filteredCards -->
+    <div class="cards">
+      <div
+        class="card"
+        v-for="card in filteredCards"
+        :key="card.id"
+        @click="open(card.id)"
+      >
+        <!-- Используется filteredCards -->
         <span class="card-item">{{ card.id }}</span>
         <span class="card-item">{{ card.name }}</span>
         <span class="card-item">{{ card.phone }}</span>
@@ -83,7 +89,7 @@ export default {
             class="status"
             :class="{
               wait: card.state === 'Ожидает',
-              done: card.state === 'Обработанные',
+              done: card.state === 'Закрыт',
             }"
           >
             {{ card.state }}
@@ -91,13 +97,8 @@ export default {
         </span>
         <span class="card-item">{{ card.created }}</span>
         <div class="card-item more">
-          <img
-            @click="card.more = !card.more"
-            src="../assets/more.svg"
-            alt=""
-          />
-        
-      </div>
+          <img @click="card.more = !card.more" src="../assets/more.svg" alt="" />
+        </div>
         <div class="options" v-if="card.more">
           <button @click="$router.push({ name: 'users' })">Посмотреть</button>
           <button @click="$router.push({ name: 'users' })">Воркеры</button>

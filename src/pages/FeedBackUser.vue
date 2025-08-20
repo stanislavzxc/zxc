@@ -1,19 +1,16 @@
 <script>
-import axios from 'axios';
-import LoadingSpinner from './LoadingSpinner.vue';
+import axios from "axios";
+import LoadingSpinner from "./LoadingSpinner.vue";
 
 export default {
   name: "AppPayment",
-  components: {LoadingSpinner},
+  components: { LoadingSpinner },
   data() {
     return {
       id: this.$route.params.id,
-      isloading:false,
+      isloading: false,
       status: "",
-      type: "Покупка",
-      name: "",
-      surname: "",
-      id_client: this.$route.params.userid,
+      id_client: "",
       email: "",
       tg: "",
       phone: "",
@@ -27,110 +24,84 @@ export default {
       gateway: "Tranzilla",
       filename: "Нет данных",
       file_size: "Нет данных",
-      data:[]
+      data: [],
+      name: "",
     };
   },
   methods: {
     async fetchUsers() {
-      this.isloading = true;
-
-      const url = `/billings`;
+      const url = "/feedbacks";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
-        console.log(response.data)
-        for (let i = 0; i < response.data.billings.length; i++) {
-          if(response.data.billings[i].id == this.id){
-              this.data = response.data.billings[i];
-
-              if (this.data.state === 'waiting') {
-            this.data.state = 'Ожидание';
-          } else if(this.data.state === 'canceled'){
-            this.data.state = 'Отклонен';
-          }else if(this.data.state === 'confirmation'){
-            this.data.state = 'В процессе';
-          }else if(this.data.state === 'completed'){
-            this.data.state = 'Готово';
-          }
-            
-            if(this.data.type === 'buy_request'){
-              this.data.type = 'Покупка';
-            }else{
-              this.data.type = 'Хостинг';
-            }
-           
-
-          } 
-          
-        }
-        
-        this.status = this.data.state;
+        console.log(response);
+        const feedbacks = response.data.feedbacks;
+        this.data = feedbacks.find((f) => f.id == this.id);
         this.createdAt = this.data.created;
-        this.currency = this.data.currency;
-        this.type_payment = this.data.type;
-        this.gateway = this.data.payment_type;
-        this.amount = this.data.value_usd;
-        console.log(this.data)
+        this.phone = this.data.phone;
+        this.name = this.data.name;
+        this.status = this.data.state;
+        this.type = this.data.type || "нет данных";
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
-        this.isloading = false;
       }
     },
-    async getUser() {
-      this.isloading = true;
-      const url = `/users/${this.id_client}`;
-      const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
-      };
 
-      try {
-        const response = await axios.get(url, { headers });
-        this.name = response.data.firstname || 'Нет данних';
-        this.surname = response.data.lastname || 'Нет данних';
-        this.email = response.data.email || 'Нет данних';
-        this.tg = response.data.telegram || 'Нет данних';
-        this.phone = response.data.phone || 'Нет данних';
-        
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }finally{
-        this.isloading = false;
-      }
-    },
     async changeStatus() {
       this.isloading = true;
-      
-      const data = new FormData();
-      data.append('btn', this.status)
 
-      const url = `/billing/${this.id}/update/state`;
+      const url = `/feedbacks/update/state`;
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+      const data = {
+        id: this.id, // Изменено с feedback_id на id
+        state: this.status, // Изменено с status на state
       };
 
       try {
-        const response = await axios.post(url, data, { headers });
-        console.log(response.data)
+        const response = await axios.post(url, data, { headers }); // Используем POST
+        console.log(response.data);
+        this.$router.push({ name: "feedback" });
+      } catch (error) {
+        console.error("Error updating status:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+
+    async getUser() {
+      this.isloading = true;
+      const url = `/users`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        const response = await axios.get(url, { headers });
+        const phone = this.data.phone;
+        this.user = response.data.find((n) => n.phone == phone);
+        this.id_client = this.user.id;
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
+      } finally {
         this.isloading = false;
-        this.$router.push({name: 'payments'})
       }
     },
   },
-  mounted() {
-    this.fetchUsers();
-    this.getUser();
+
+  async mounted() {
+    await this.fetchUsers();
+    await this.getUser();
   },
 };
 </script>
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <section class="wrapper" v-else>
     <h1>Оплата #{{ id }}</h1>
     <div class="card">
@@ -146,62 +117,43 @@ export default {
           placeholder="Выберите состояние"
           @change="changeStatus()"
         >
-          <option value="completed" >Оплачен</option>
-          <option value="canceled">Не оплачен</option>
-          <option value="confirmation">В процессе</option>
-          <option value="waiting">Ожидает</option>
+          <option value="wait">Ожидает</option>
+          <option value="close">Закрыт</option>
         </select>
       </div>
     </div>
     <div class="card">
       <h2>Основная информация</h2>
+
       <div class="info-item">
-        <span class="info-title">Тип:</span>
-        <span class="info-value open">{{ type }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-title">Статус:</span>
-        <span
-          class="status"
-          :class="{
-            progress: status === 'В процессе',
-              done: status === 'Готово',
-              canceled: status === 'Отклонен',
-              confirmation: status === 'Ожидание',
-          }"
-          >{{ status }}</span
-        >
-      </div>
-      <div class="info-item">
-        <span class="info-title">Имя:</span>
+        <span class="info-title">Пользователь:</span>
         <span class="info-value">{{ name }}</span>
       </div>
-      <div class="info-item">
-        <span class="info-title">Фамилия:</span>
-        <span class="info-value">{{ surname }}</span>
-      </div>
+
       <div class="info-item">
         <span class="info-title">ID клиента:</span>
-        <span class="info-value open">{{ id_client }}</span>
+        <span class="info-value open" @click="$router.push({ name: 'users' })">{{
+          id_client
+        }}</span>
       </div>
-      <div class="info-item">
-        <span class="info-title">E-mail:</span>
-        <span class="info-value">{{ email }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-title">Telegram:</span>
-        <span class="info-value">{{ tg }}</span>
-      </div>
+
       <div class="info-item">
         <span class="info-title">Телефон:</span>
         <span class="info-value">{{ phone }}</span>
       </div>
+
       <div class="info-item">
-        <span class="info-title">Headframe-аккаунт:</span>
-        <span class="info-value open">{{ headFrame }}</span>
+        <span class="info-title">Дата создания:</span>
+        <span class="info-value open">{{ createdAt }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-title">Тип:</span>
+        <span class="info-value open" v-if="data.type == 'business'">Готовый бизнес</span>
+        <span class="info-value open" v-if="data.type == 'нет данных'">нет данных</span>
+        <span class="info-value open" v-else>Опт</span>
       </div>
     </div>
-    <div class="card">
+    <!-- <div class="card">
       <h2>Информация о счёте</h2>
       <div class="info-item">
         <span class="info-title">Дата создания:</span>
@@ -232,9 +184,9 @@ export default {
         <span class="info-value open" v-if="data.payment_type == 'rus_card'">Tranzilla</span>
         <span class="info-value open" v-else>{{ data.payment_type }}</span>
       </div>
-    </div>
-    
-    <div class="card" v-if="data.image">
+    </div> -->
+
+    <!-- <div class="card" v-if="data.image">
       <h2>Документ</h2>
       <div class="card-file">
         <div class="file">
@@ -249,7 +201,7 @@ export default {
           <button class="btn delete">Удалить</button>
         </div>
       </div>
-    </div>
+    </div> -->
   </section>
 </template>
 <style scoped>
@@ -429,7 +381,7 @@ h2 {
   background-color: #f0feed;
   color: #259800;
 }
-.process{
+.process {
   background-color: #edf5fe;
   color: #3083ff;
 }
