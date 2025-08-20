@@ -1,63 +1,114 @@
 <script>
-import axios from 'axios';
-import LoadingSpinner from './LoadingSpinner.vue';
+import axios from "axios";
+import LoadingSpinner from "./LoadingSpinner.vue";
+import ModalAccept from "./ModalAccept.vue";
+
 export default {
   name: "AppEmployee",
-  components: {LoadingSpinner},
+  components: { LoadingSpinner, ModalAccept },
+
   data() {
     return {
-      isloading:false,
-      id: this.$route.params.id,
+      isloading: false,
+      id: Number(this.$route.params.id),
+
       name: "",
       email: "",
       phone: "",
       telegram: "",
       role: "",
+      image: "",
+
       users: true,
-      staff: true,
-      shops: true,
+      employees: true,
+      orders: true,
       tickets: true,
-      feedback: true,
+      feedbacks: true,
       miners: true,
+      is_open: false,
     };
   },
-  methods: {
-    async fetchUsers() {
-      this.isloading = true;
-      const url = "/employees";
-      const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
-      };
 
+  methods: {
+    /* получение сотрудника */
+    async fetchEmployee() {
+      this.isloading = true;
       try {
-        const response = await axios.get(url, { headers });
-        console.log(response.data)
-        let data = [];
-        for (let i = 0; i < response.data.length; i++) {
-          if(response.data[i].id === this.id){
-            data = response.data[i];
-            return
-          }      
-        }
-        this.name = data.username;
-        this.email = data.email;
-        this.role = data.role;
-        // this.name = data.username;
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }finally{
+        const { data } = await axios.get("/employees", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const user = data.find((u) => u.id === this.id);
+        if (!user) throw new Error("Employee not found");
+
+        Object.assign(this, {
+          name: user.username,
+          email: user.email,
+          phone: user.phone || "",
+          telegram: user.telegram || "",
+          role: user.role,
+          image: user.image || "",
+          users: user.users,
+          employees: user.employees,
+          orders: user.orders,
+          tickets: user.tickets,
+          feedbacks: user.feedbacks,
+          miners: user.miners,
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Ошибка загрузки данных");
+      } finally {
         this.isloading = false;
       }
     },
+
+    /* обновление сотрудника */
+    async updateEmployee() {
+      if (!this.name || !this.email) {
+        alert("Заполните имя и e-mail");
+        return;
+      }
+
+      const payload = {
+        name: this.name,
+        email: this.email,
+        password: "dummy", // сервер требует поле, но можно оставить заглушку
+        role: this.role,
+        phone: this.phone,
+        telegram: this.telegram,
+        image: this.image || null,
+
+        users: this.users,
+        employees: this.employees,
+        orders: this.orders,
+        tickets: this.tickets,
+        feedbacks: this.feedbacks,
+        miners: this.miners,
+      };
+
+      try {
+        await axios.post(`/employees/update/${this.id}`, payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        this.is_open = false;
+      } catch (err) {
+        console.error(err);
+        alert("Ошибка обновления");
+      }
+    },
   },
+
   mounted() {
-    this.fetchUsers();
+    this.fetchEmployee();
   },
 };
 </script>
+
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <section class="wrapper" v-else>
+    <ModalAccept @close="is_open = false" @update="updateEmployee()" v-if="is_open" />
+
     <div class="group-title">
       <h1>{{ id }}</h1>
       <!-- <button class="btn edit">Редактиовать</button> -->
@@ -66,8 +117,10 @@ export default {
       <h2>Общая информация</h2>
       <div class="wrap-avatar">
         <div class="container-img">
-          <img src="../assets/image.png" alt="" />
+          <img src="../assets/image.png" alt="" v-if="!image" />
+          <img :src="image" alt="" v-else />
         </div>
+
         <div class="actions-avatar">
           <a class="edit-img">Изменить</a>
           <a class="delete">Удалить</a>
@@ -131,10 +184,11 @@ export default {
           class="group-item"
           placeholder="Выберите роль"
         >
-          <option value="boundary">Администратор</option>
+          <option value="admin">Администратор</option>
+          <option value="operator">Оператор</option>
         </select>
       </div>
-      <button class="btn save">Сохранить</button>
+      <button class="btn save" @click="is_open = true">Сохранить</button>
     </div>
     <div class="card">
       <h2>Доступные разделы</h2>
@@ -143,36 +197,26 @@ export default {
         <label for="users" class="group-value">Пользователи</label>
       </div>
       <div class="wrap-check">
-        <input type="checkbox" v-model="staff" id="staff" class="checkbox" />
+        <input type="checkbox" v-model="employees" id="employees" class="checkbox" />
         <label for="staff" class="group-value">Сотрудники</label>
       </div>
       <div class="wrap-check">
-        <input type="checkbox" v-model="shops" id="shops" class="checkbox" />
+        <input type="checkbox" v-model="orders" id="orders" class="checkbox" />
         <label for="shops" class="group-value">Заказы</label>
       </div>
       <div class="wrap-check">
-        <input
-          type="checkbox"
-          v-model="tickets"
-          id="tickets"
-          class="checkbox"
-        />
+        <input type="checkbox" v-model="tickets" id="tickets" class="checkbox" />
         <label for="tickets" class="group-value">Тикеты</label>
       </div>
       <div class="wrap-check">
-        <input
-          type="checkbox"
-          v-model="feedback"
-          id="feedback"
-          class="checkbox"
-        />
+        <input type="checkbox" v-model="feedbacks" id="feedbacks" class="checkbox" />
         <label for="feedback" class="group-value">Обратная связь</label>
       </div>
       <div class="wrap-check">
         <input type="checkbox" v-model="miners" id="miners" class="checkbox" />
         <label for="miners" class="group-value">Майнеры</label>
       </div>
-      <button class="btn save">Сохранить</button>
+      <button class="btn save" @click="is_open = true">Сохранить</button>
     </div>
   </section>
 </template>

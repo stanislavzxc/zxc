@@ -1,6 +1,7 @@
 <script>
 import axios from "axios";
 import LoadingSpinner from "./LoadingSpinner.vue";
+import ModalEmployee from "./ModalEmployee.vue";
 
 export default {
   name: "AppStaff",
@@ -9,9 +10,10 @@ export default {
       cards: [],
       search: "",
       isloading: false,
+      is_open: false,
     };
   },
-  componetnts: { LoadingSpinner },
+  components: { LoadingSpinner, ModalEmployee },
 
   computed: {
     filteredCards() {
@@ -28,6 +30,59 @@ export default {
         console.log(err);
       }
     },
+    async create(data) {
+      this.isloading = true;
+      const url = "/employees/new";
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        // Получаем изображение в формате Base64
+        const base64Image = await this.getBase64Image(require("@/assets/deleted.jpg"));
+
+        // Добавляем изображение в объект data
+        data.image = base64Image;
+
+        console.log(data); // Здесь будет объект с данными и изображением
+
+        const response = await axios.post(url, data, { headers });
+        console.log(response.data);
+        await this.fetchUsers();
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        this.isloading = false;
+        this.is_open = false;
+      }
+    },
+
+    // Вспомогательный метод для получения Base64 из изображения
+    getBase64Image(image) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result); // вернёт Base64
+        };
+        reader.onerror = reject;
+
+        // Создаём объект изображения и загружаем его
+        const img = new Image();
+        img.src = image;
+        img.crossOrigin = "Anonymous"; // Позволяет загрузить изображение с другого домена
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => {
+            reader.readAsDataURL(blob); // Читаем как Data URL
+          }, "image/png");
+        };
+      });
+    },
+
     async fetchUsers() {
       this.isloading = true;
       const url = "/employees";
@@ -58,9 +113,10 @@ export default {
 <template>
   <LoadingSpinner v-if="isloading" />
   <div class="wrapper" v-else>
+    <ModalEmployee @close="is_open = false" @update="create" v-if="is_open" />
     <div class="group-title">
       <h1>Сотрудники</h1>
-      <button class="btn add_user" @click="create()">Добавить сотрудника</button>
+      <button class="btn add_user" @click="is_open = true">Добавить сотрудника</button>
     </div>
     <div class="actions">
       <img src="../assets/search-support.svg" alt="" class="search-img" />

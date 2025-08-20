@@ -1,17 +1,17 @@
 <script>
-import axios from 'axios';
-import LoadingSpinner from './LoadingSpinner.vue';
-
+import axios from "axios";
+import LoadingSpinner from "./LoadingSpinner.vue";
+import ModalAccept from "./ModalAccept.vue";
 
 export default {
   name: "AppMiner",
-  components: {LoadingSpinner},
+  components: { LoadingSpinner, ModalAccept },
   data() {
     return {
-      isloading:false,
+      isloading: false,
       id: this.$route.params.id,
       name: "",
-      rang: '',
+      rang: "",
       show: null,
       desc: "",
       category: "",
@@ -20,14 +20,14 @@ export default {
       energy_consumption: "",
       price: "",
       image: "",
-      count_sale: '',
-      sale: '',
+      count_sale: "",
+      sale: "",
       id_client: "",
-      count_client: '',
-      sale_client: '',
-      selectedFile: require('../assets/deleted.jpg'),
-      closed:null,
- 
+      count_client: "",
+      sale_client: "",
+      selectedFile: require("../assets/deleted.jpg"),
+      closed: null,
+      is_open: false,
     };
   },
   methods: {
@@ -36,171 +36,175 @@ export default {
 
       const url = `/miners/${this.id}/`;
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
 
         const miner = response.data.miner_item;
-      
+
         // const image = response.data.miner_item.image || 'Нет данных';
-       
-        this.name = miner.name || 'Нет данных';
-        this.rang = miner.priority || 'Нет данных';
-        this.show = miner.is_hidden || 'Нет данных';
-        this.desc = miner.description || 'Нет данных';
+
+        this.name = miner.name || "Нет данных";
+        this.rang = miner.priority || "Нет данных";
+        this.show = miner.is_hidden || "Нет данных";
+        this.desc = miner.description || "Нет данных";
         this.categories = response.data.categories || [];
         const currentCategory = miner.category || {};
         this.category = currentCategory.name;
-        this.hash = miner.hash_rate|| 'Нет данных';
-        this.energy_consumption = miner.energy_consumption || 'Нет данных';
-        this.price = miner.price || 'Нет данных';
-        this.image = (miner.image.url || 'Нет данных').replace('https://209.46.123.31:9000', 'https://totalminers.io');
+        this.hash = miner.hash_rate || "Нет данных";
+        this.energy_consumption = miner.energy_consumption || "Нет данных";
+        this.price = miner.price || "Нет данных";
+        this.image = (miner.image.url || "Нет данных").replace(
+          "https://209.46.123.31:9000",
+          "https://totalminers.io"
+        );
         this.closed = miner.is_hidden;
-        this.category_id = miner.category.id || 1,
-        // this.image_id = image.url || 'Нет данных';
+        (this.category_id = miner.category.id || 1),
+          // this.image_id = image.url || 'Нет данных';
 
-        this.count_sale = miner.discount_count || 0;
+          (this.count_sale = miner.discount_count || 0);
         this.sale = miner.discount_value || 0;
-        console.log(response.data)
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
-      this.isloading = false;
+      } finally {
+        this.isloading = false;
       }
     },
     selectImage() {
-    this.$refs.fileInput.click(); // Программно вызываем клик на скрытом input
-  },
+      this.$refs.fileInput.click(); // Программно вызываем клик на скрытом input
+    },
 
-  async onFileChange(event) {
-    const file = event.target.files[0];
-    if (file) {
-      this.image = URL.createObjectURL(file); // Отображаем выбранное изображение
+    async onFileChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.image = URL.createObjectURL(file); // Отображаем выбранное изображение
+        this.selectedFile = file; // Сохраняем файл для отправки на сервер
+        this.update();
+      }
+    },
+    async deleteImage() {
+      console.log("deleteImage called"); // Проверка вызова метода
+      // Создаем объект файла из изображения по умолчанию
+      const defaultImagePath = require("../assets/deleted.jpg"); // Путь к изображению
+      const response = await fetch(defaultImagePath);
+      const blob = await response.blob(); // Получаем Blob из изображения
+      // Создаем объект File
+      const file = new File([blob], "deleted.jpg", { type: "image/png" }); // Укажите правильный тип
+      // Устанавливаем изображение по умолчанию для отображения
+      this.image = defaultImagePath;
+      // Сбрасываем selectedFile и добавляем новый файл в FormData
       this.selectedFile = file; // Сохраняем файл для отправки на сервер
-      this.update();
-    }
-  },
-  async deleteImage() {
-    console.log("deleteImage called"); // Проверка вызова метода
-  // Создаем объект файла из изображения по умолчанию
-  const defaultImagePath = require('../assets/deleted.jpg'); // Путь к изображению
-  const response = await fetch(defaultImagePath);
-  const blob = await response.blob(); // Получаем Blob из изображения
-  // Создаем объект File
-  const file = new File([blob], 'deleted.jpg', { type: 'image/png' }); // Укажите правильный тип
-  // Устанавливаем изображение по умолчанию для отображения
-  this.image = defaultImagePath;
-  // Сбрасываем selectedFile и добавляем новый файл в FormData
-  this.selectedFile = file; // Сохраняем файл для отправки на сервер
-  await this.update(); // Вызываем метод обновления
-    
-  },
+      await this.update(); // Вызываем метод обновления
+    },
 
-  async update() {
-  this.isloading = true;
-  const url = `/miners/${this.id}/`;
-  const headers = {
-    "Authorization": `Bearer ${localStorage.getItem('token')}`,
-  };
-  const data = new FormData();
-  data.append('name', this.name);
-  data.append('description', this.desc);
-  data.append('category', this.category_id);
-  data.append('hash_rate', this.hash);
-  data.append('energy_consumption', this.energy_consumption);
-  data.append('price', this.price);
-  data.append('priority', this.rang);
-  data.append('ishidden', this.closed ? 'on' : 'off');
-
-  data.append('discount_value', this.sale);
-  data.append('discount_count', this.count_sale);
-
-  if (this.selectedFile) {
-    data.append('image', this.selectedFile);
-  }
-
-  try {
-    const response = await axios.post(url, data, { headers });
-    console.log(response);
-  } catch (error) {
-    console.error("Error uploading data:", error);
-  } finally {
-    this.isloading = false;
-  }
-},
-
-
-    async Cart(){
+    async update() {
+      this.is_open = false;
       this.isloading = true;
-      const url = 'https://totalminers.io/api/market/cart/set';
+      const url = `/miners/${this.id}/`;
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+      const data = new FormData();
+      data.append("name", this.name);
+      data.append("description", this.desc);
+      data.append("category", this.category_id);
+      data.append("hash_rate", this.hash);
+      data.append("energy_consumption", this.energy_consumption);
+      data.append("price", this.price);
+      data.append("priority", this.rang);
+      data.append("ishidden", this.closed ? "on" : "off");
+
+      data.append("discount_value", this.sale);
+      data.append("discount_count", this.count_sale);
+
+      if (this.selectedFile) {
+        data.append("image", this.selectedFile);
+      }
+
+      try {
+        const response = await axios.post(url, data, { headers });
+        console.log(response);
+      } catch (error) {
+        console.error("Error uploading data:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+
+    async Cart() {
+      this.isloading = true;
+      const url = "https://totalminers.io/api/market/cart/set";
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
       const data = {
         user_id: parseInt(this.id_client),
-        miner_item_id:parseInt(this.id),
+        miner_item_id: parseInt(this.id),
         count: parseInt(this.count_client),
-        discount: parseInt(this.sale_client)
-      }
+        discount: parseInt(this.sale_client),
+      };
       try {
-    const response = await axios.put(url, data, { headers });
-    console.log(response);
-    if (response.status === 200) {
-        alert('Успешно!');
-    }
-} catch (error) {
-    if (error.response) {
-        // Сервер вернул статус код, отличный от 2xx
-        alert(`Ошибка ${error.response.status}`);
-    } else {
-        // Ошибка при настройке запроса
-        alert('Ошибка при отправке запроса');
-    }
-    console.error("Error fetching users:", error);
-} finally {
-    this.isloading = false;
-}
-
+        const response = await axios.put(url, data, { headers });
+        console.log(response);
+        if (response.status === 200) {
+          alert("Успешно!");
+        }
+      } catch (error) {
+        if (error.response) {
+          // Сервер вернул статус код, отличный от 2xx
+          alert(`Ошибка ${error.response.status}`);
+        } else {
+          // Ошибка при настройке запроса
+          alert("Ошибка при отправке запроса");
+        }
+        console.error("Error fetching users:", error);
+      } finally {
+        this.isloading = false;
+      }
     },
-    async deleteMiners(){
+    async deleteMiners() {
       this.isloading = true;
       const url = `/miners/${this.id}/delete`;
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
       try {
         const response = await axios.post(url, {}, { headers });
-        console.log(response)
-         
+        console.log(response);
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
+      } finally {
         this.isloading = false;
         this.$router.push({ name: "miners" });
       }
     },
     onCategoryChange(event) {
-    const selectedName = event.target.value;
-    const selectedCat = this.categories.find(cat => cat.name === selectedName);
-    if (selectedCat) {
-      this.changeCategoryId(selectedCat.id);
-    }
+      const selectedName = event.target.value;
+      const selectedCat = this.categories.find((cat) => cat.name === selectedName);
+      if (selectedCat) {
+        this.changeCategoryId(selectedCat.id);
+      }
+    },
+    changeCategoryId(id) {
+      this.category_id = id;
+      console.log("Selected category id:", id);
+    },
+    open() {
+      this.is_open = true;
+      console.log(this.is_open);
+    },
   },
-  changeCategoryId(id) {
-    this.category_id = id;
-    console.log('Selected category id:', id);
-  },
-},
-mounted(){
+  mounted() {
     this.getMiners();
-  }
-}
+  },
+};
 </script>
 <template>
-  <LoadingSpinner v-if="isloading"/>
-
+  <ModalAccept @close="is_open = false" @update="update()" v-if="is_open" />
+  <LoadingSpinner v-if="isloading" />
   <section class="wrapper" v-else>
     <div class="group-title">
       <h1>Майнер #{{ id }}</h1>
@@ -247,14 +251,19 @@ mounted(){
         <label for="closed" class="group-value">Скрыть</label>
       </div>
       <div class="group">
-  <label for="category" class="group-value">Категория</label>
- <select class="group-item" name="category" id="category" v-model="category" @change="onCategoryChange">
-  <option v-for="cat in categories" :key="cat.id" :value="cat.name">
-    {{ cat.name }}
-  </option>
-</select>
-
-</div>
+        <label for="category" class="group-value">Категория</label>
+        <select
+          class="group-item"
+          name="category"
+          id="category"
+          v-model="category"
+          @change="onCategoryChange"
+        >
+          <option v-for="cat in categories" :key="cat.id" :value="cat.name">
+            {{ cat.name }}
+          </option>
+        </select>
+      </div>
       <div class="wrap-group">
         <div class="group">
           <label for="hash" class="group-value">Хешрейт (TH/s)</label>
@@ -294,24 +303,27 @@ mounted(){
       </div>
       <div class="wrap-avatar">
         <div class="container-img">
-      <img :src="image ? image : '../assets/image.png'" alt="Майнер" />
-    </div>
-    <div class="actions-avatar">
-      <a class="edit-img" @click="selectImage">
-        Изменить
-        <input type="file" ref="fileInput" @change="onFileChange" style="display: none;" />
-      </a>
-      <a class="delete-img" @click="deleteImage">Удалить</a>
-    </div>
-</div>
+          <img :src="image ? image : '../assets/image.png'" alt="Майнер" />
+        </div>
+        <div class="actions-avatar">
+          <a class="edit-img" @click="selectImage">
+            Изменить
+            <input
+              type="file"
+              ref="fileInput"
+              @change="onFileChange"
+              style="display: none"
+            />
+          </a>
+          <a class="delete-img" @click="deleteImage">Удалить</a>
+        </div>
+      </div>
     </div>
     <div class="card">
       <h2>Скидки</h2>
       <div class="wrap-group">
         <div class="group">
-          <label for="count_sale" class="group-value"
-            >Количество для скидки</label
-          >
+          <label for="count_sale" class="group-value">Количество для скидки</label>
           <input
             type="text"
             id="count_sale"
@@ -332,10 +344,10 @@ mounted(){
             placeholder="Введите энергопотребление"
           />
         </div>
-        
+
         <!-- <button class="delete-img">Удалить</button> -->
       </div>
-      
+
       <!-- <button class="edit-img">Добавить</button> -->
     </div>
     <div class="card">
@@ -378,8 +390,8 @@ mounted(){
       <button class="btn send" @click="Cart()">Отправить</button>
     </div>
     <div class="wrap-btns">
-      <button class="btn delete" @click="deleteMiners()">Удалить</button>
-      <button class="btn save" @click="update()">Сохранить</button>
+      <button class="btn delete" @click="open()">Удалить</button>
+      <button class="btn save" @click="open()">Сохранить</button>
     </div>
   </section>
 </template>
