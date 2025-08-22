@@ -1,14 +1,23 @@
 <script>
+import axios from "axios";
+import ModalAccept from "./ModalAccept.vue";
+import LoadingSpinner from "./LoadingSpinner.vue";
+
 export default {
   name: "AppMailing",
-  components: {},
+
+  components: { ModalAccept, LoadingSpinner },
   data() {
     return {
       active: 1,
-      mail: "Шаблон 1",
       error: true,
-      users_error: ["1923", "19232"],
+      users_error: [],
       users_manually: "",
+      is_open: false,
+      isloading: false,
+      template_id: null,
+      // user_ids_str: "",
+      mails: [],
       users: [
         {
           id: 1,
@@ -77,37 +86,113 @@ export default {
         console.log(err);
       }
     },
+    async update() {
+      this.is_open = false;
+      this.isloading = true;
+      const url = `/campaign/send`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+
+      const data = {
+        template_id: this.template_id,
+        user_ids: this.users_manually,
+      };
+      console.log(data);
+      try {
+        const response = await axios.post(url, data, { headers });
+        console.log(response);
+      } catch (error) {
+        console.error("Error uploading data:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+    async getMails() {
+      this.isloading = true;
+      const url = `/mail_templates`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        const response = await axios.get(url, { headers });
+        console.log(response.data);
+
+        // Фильтруем только элементы с template_type == 'mail' и преобразуем их
+        this.mails = response.data
+          .filter((item) => item.template_type === "mail")
+          .map((item) => ({
+            id: item.id,
+            name: item.title,
+            template: item.content,
+            template_type: item.template_type,
+          }));
+      } catch (error) {
+        console.error("Error updating settings:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+    async getSms() {
+      this.isloading = true;
+      const url = `/mail_templates`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        const response = await axios.get(url, { headers });
+        console.log(response.data);
+
+        // Фильтруем только элементы с template_type == 'mail' и преобразуем их
+        this.mails = response.data
+          .filter((item) => item.template_type === "sms")
+          .map((item) => ({
+            id: item.id,
+            name: item.title,
+            template: item.content,
+            template_type: item.template_type,
+          }));
+
+        this.count = this.mails.length;
+      } catch (error) {
+        console.error("Error updating settings:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+    mailChange(id) {
+      this.template_id = id;
+    },
   },
-  mounted() {},
+  async mounted() {
+    this.getMails();
+  },
 };
 </script>
 <template>
+  <LoadingSpinner v-if="isloading" />
   <section class="wrapper">
+    <ModalAccept @close="is_open = false" @update="update()" v-if="is_open" />
     <h1>Рассылки</h1>
     <div class="wrap-btns">
-      <button
-        class="btn"
-        @click="changeActive(1)"
-        :class="{ active: active == 1 }"
-      >
+      <button class="btn" @click="changeActive(1)" :class="{ active: active == 1 }">
         Почта
       </button>
-      <button
-        class="btn"
-        @click="changeActive(2)"
-        :class="{ active: active == 2 }"
-      >
+      <button class="btn" @click="changeActive(2)" :class="{ active: active == 2 }">
         Телефон
       </button>
     </div>
-    <div class="error" v-if="error">
+    <!-- <div class="error" v-if="error">
       <div class="text">
         Пользователи:
         <span v-for="user in users_error" :key="user">{{ user }}</span
         >Запретили рассылку
       </div>
       <img @click="error = false" src="../assets/close.svg" alt="" />
-    </div>
+    </div> -->
     <div class="card">
       <h2>Рассылка</h2>
       <div class="group">
@@ -119,12 +204,15 @@ export default {
           v-model="mail"
           class="group-item"
           placeholder="Выберите шаблон письма"
+          @change="mailChange(mail)"
         >
-          <option value="Шаблон 1">Шаблон 1</option>
+          <option v-for="mail in mails" :key="mail.id" :value="mail.id">
+            {{ mail.name }}
+          </option>
         </select>
       </div>
       <div class="group">
-        <label for="status" class="group-value">Указать вручную:</label>
+        <label for="status" class="group-value">Указать вручную(через запятую):</label>
         <input
           type="text"
           class="group-item"
@@ -132,7 +220,7 @@ export default {
           placeholder="Введите ID пользователей"
         />
       </div>
-      <button class="card-btn send">Отправить</button>
+      <button class="card-btn send" @click="this.is_open = true">Отправить</button>
     </div>
     <h1>Пользователи</h1>
     <div class="actions">
@@ -154,11 +242,7 @@ export default {
         <span class="user-item">{{ user.last_send }}</span>
         <span class="user-item">{{ user.last_mail }}</span>
         <div class="card-item more">
-          <input
-            type="checkbox"
-            @click="removeUser(user.id)"
-            v-model="user.status"
-          />
+          <input type="checkbox" @click="removeUser(user.id)" v-model="user.status" />
         </div>
       </div>
     </div>

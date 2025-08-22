@@ -23,6 +23,7 @@ async function getToken() {
 
 getToken();
 // getTokenApi();
+// router.push({name: 'main'})
 createApp(App)
   .use(vue3GoogleLogin, {
     clientId:

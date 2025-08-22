@@ -103,7 +103,7 @@ export default {
 <template>
   <LoadingSpinner v-if="isloading" />
   <section class="wrapper" v-else>
-    <h1>Оплата #{{ id }}</h1>
+    <h1>#{{ id }}</h1>
     <div class="card">
       <h2>Действия</h2>
       <div class="group">

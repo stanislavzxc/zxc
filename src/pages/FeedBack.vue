@@ -83,7 +83,8 @@ export default {
         <span class="card-item">{{ card.id }}</span>
         <span class="card-item">{{ card.name }}</span>
         <span class="card-item">{{ card.phone }}</span>
-        <span class="card-item">{{ card.state }}</span>
+        <span class="card-item" v-if="card.type">{{ card.type }}</span>
+        <span class="card-item">Готовый бизнес</span>
         <span class="card-item">
           <div
             class="status"

@@ -1,5 +1,5 @@
 <script>
-import axios from 'axios'
+import axios from "axios";
 export default {
   name: "AppTicket",
   data() {
@@ -44,18 +44,15 @@ export default {
     async openTicket() {
       try {
         this.isLoading = true;
-        let response = await axios.get(
-          `https://totalminers.io/api/tickets/close`,
-          {
-            params: {
-              id: this.ticket_id,
-              userId: this.userid,
-            },
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        let response = await axios.get(`https://totalminers.io/api/tickets/close`, {
+          params: {
+            id: this.ticket_id,
+            userId: this.userid,
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         console.log(response);
       } catch (err) {
         console.log(err);
@@ -65,7 +62,7 @@ export default {
     },
 
     zxc() {
-      if (this.status === 'Открыт') {
+      if (this.status === "Открыт") {
         this.openTicket();
       } else {
         this.closeTicket();
@@ -73,13 +70,13 @@ export default {
     },
 
     update_data() {
-      this.ticket_id = localStorage.getItem('ticket_id');
-      this.status = localStorage.getItem('is_open');
-      this.theme = localStorage.getItem('title');
-      this.client = localStorage.getItem('firstname');
-      this.client2 = localStorage.getItem('lastname');
-      this.createdAt = localStorage.getItem('date');
-      this.userid = localStorage.getItem('id');
+      this.ticket_id = localStorage.getItem("ticket_id");
+      this.status = localStorage.getItem("is_open");
+      this.theme = localStorage.getItem("title");
+      this.client = localStorage.getItem("firstname");
+      this.client2 = localStorage.getItem("lastname");
+      this.createdAt = localStorage.getItem("date");
+      this.userid = localStorage.getItem("id");
     },
 
     handleFileChange(event) {
@@ -96,24 +93,24 @@ export default {
       }
 
       const formData = new FormData();
-      formData.append('file', this.selectedFile);
+      formData.append("file", this.selectedFile);
 
       try {
         const response = await axios.post(`/tickets/${this.ticket_id}`, formData, {
           headers: {
-            "Authorization": `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "multipart/form-data",
           },
         });
 
-        console.log('Файл успешно отправлен:', response.data.message);
+        console.log("Файл успешно отправлен:", response.data.message);
 
         // Добавляем файл в массив сообщений
         this.messages.push({
           id: Date.now(),
-          sender: 'admin',
-          content: '', // Пустое текстовое сообщение, так как отправлен файл
-          type: 'file',
+          sender: "admin",
+          content: "", // Пустое текстовое сообщение, так как отправлен файл
+          type: "file",
           name: this.selectedFile.name,
           size: this.selectedFile.size,
           url: URL.createObjectURL(this.selectedFile), // Создаем URL для отображения файла
@@ -121,12 +118,12 @@ export default {
 
         // Очищаем выбранный файл
         this.selectedFile = null;
-        this.$refs.fileInput.value = ''; // Сбрасываем выбранный файл
+        this.$refs.fileInput.value = ""; // Сбрасываем выбранный файл
       } catch (error) {
         if (error.response) {
-          console.error('Ошибка:', error.response.data.error);
+          console.error("Ошибка:", error.response.data.error);
         } else {
-          console.error('Ошибка при отправке файла:', error);
+          console.error("Ошибка при отправке файла:", error);
         }
       }
     },
@@ -138,34 +135,34 @@ export default {
       }
 
       const formData = new FormData();
-      formData.append('msg', this.newMessage);
+      formData.append("msg", this.newMessage);
 
       try {
         const response = await axios.post(`/tickets/${this.ticket_id}`, formData, {
           headers: {
-            "Authorization": `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "multipart/form-data",
           },
         });
 
-        console.log('Сообщение успешно отправлено:', response.data.message);
+        console.log("Сообщение успешно отправлено:", response.data.message);
 
         // Добавляем текстовое сообщение в массив сообщений
         this.messages.push({
           id: Date.now(),
-          sender: 'admin',
+          sender: "admin",
           content: this.newMessage,
-          type: 'text',
-          name: '',
-          size: '',
+          type: "text",
+          name: "",
+          size: "",
         });
 
-        this.newMessage = '';
+        this.newMessage = "";
       } catch (error) {
         if (error.response) {
-          console.error('Ошибка:', error.response.data.error);
+          console.error("Ошибка:", error.response.data.error);
         } else {
-          console.error('Ошибка при отправке сообщения:', error);
+          console.error("Ошибка при отправке сообщения:", error);
         }
       }
     },
@@ -190,51 +187,52 @@ export default {
         console.log(response);
 
         // Обработка сообщений
-        this.messages = response.data.messages.map(msg => {
-          let url = null;
-          let name = null;
+        this.messages = response.data.messages
+          .map((msg) => {
+            let url = null;
+            let name = null;
 
-          // Проверяем, что msg.content не null
-          const content = msg.content || ''; // Если null, используем пустую строку
+            // Проверяем, что msg.content не null
+            const content = msg.content || ""; // Если null, используем пустую строку
 
-          if (content.startsWith('[file:')) {
-            // Парсим имя файла и base64
-            const match = content.match(/^\[file:(.+?)\](.+)$/);
-            if (match) {
-              name = match[1];
-              url = match[2];
+            if (content.startsWith("[file:")) {
+              // Парсим имя файла и base64
+              const match = content.match(/^\[file:(.+?)\](.+)$/);
+              if (match) {
+                name = match[1];
+                url = match[2];
+              }
+              return {
+                id: msg.id,
+                sender: msg.sender,
+                content: "", // Пустое текстовое сообщение, так как это файл
+                type: "file",
+                name,
+                size: "", // Можно добавить размер, если он доступен
+                url,
+              };
+            } else {
+              // Если это текстовое сообщение
+              return {
+                id: msg.id,
+                sender: msg.sender,
+                content: content, // Сохраняем текст сообщения
+                type: "text",
+                name: "",
+                size: "",
+              };
             }
-            return {
-              id: msg.id,
-              sender: msg.sender,
-              content: '', // Пустое текстовое сообщение, так как это файл
-              type: 'file',
-              name,
-              size: '', // Можно добавить размер, если он доступен
-              url,
-            };
-          } else {
-            // Если это текстовое сообщение
-            return {
-              id: msg.id,
-              sender: msg.sender,
-              content: content, // Сохраняем текст сообщения
-              type: 'text',
-              name: '',
-              size: '',
-            };
-          }
-        }).reverse();
-
+          })
+          .reverse();
       } catch (err) {
         console.log(err);
       }
     },
 
-    downloadFile(base64String, fileName) {
-      const link = document.createElement('a');
-      link.href = base64String;
-      link.download = fileName;
+    downloadFile(url, fileName) {
+      const link = document.createElement("a");
+      link.href = url; // Используем URL из сообщения
+      link.download = fileName; // Имя файла для скачивания
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -309,10 +307,26 @@ export default {
               v-if="message.type == 'file'"
               :key="message.id"
               :class="{ userMessage: message.sender == 'user' }"
-              @click="downloadFile('data:application/octet-stream;base64,' + message.url, message.name)"
+              @click="
+                downloadFile(
+                  'data:application/octet-stream;base64,' + message.url,
+                  message.name
+                )
+              "
             >
-              <template v-if="message.name.endsWith('.jpg') || message.name.endsWith('.jpeg') || message.name.endsWith('.png') || message.name.endsWith('.gif')">
-                <img :src="message.url" alt="Uploaded Image" style="max-width: 100%; height: auto;" />
+              <template
+                v-if="
+                  message.name.endsWith('.jpg') ||
+                  message.name.endsWith('.jpeg') ||
+                  message.name.endsWith('.png') ||
+                  message.name.endsWith('.gif')
+                "
+              >
+                <img
+                  :src="message.url"
+                  alt="Uploaded Image"
+                  style="max-width: 100%; height: auto"
+                />
               </template>
               <template v-else>
                 <img src="../assets/message-file.svg" alt="File Icon" />
@@ -324,11 +338,7 @@ export default {
             </div>
 
             <div class="avatar">
-              <img
-                src="../assets/image.png"
-                alt=""
-                v-if="message.sender == 'user'"
-              />
+              <img src="../assets/image.png" alt="" v-if="message.sender == 'user'" />
             </div>
           </div>
         </div>
