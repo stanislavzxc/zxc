@@ -2,16 +2,17 @@
 import axios from "axios";
 import LoadingSpinner from "./LoadingSpinner.vue";
 import ModalAccept from "./ModalAccept.vue";
+import ModalDelete from "./ModalDelete.vue";
 
 export default {
   name: "AppEmployee",
-  components: { LoadingSpinner, ModalAccept },
+  components: { LoadingSpinner, ModalAccept, ModalDelete },
 
   data() {
     return {
       isloading: false,
       id: Number(this.$route.params.id),
-
+      is_delete: false,
       name: "",
       email: "",
       phone: "",
@@ -72,7 +73,6 @@ export default {
       const payload = {
         name: this.name,
         email: this.email,
-        password: "dummy", // сервер требует поле, но можно оставить заглушку
         role: this.role,
         phone: this.phone,
         telegram: this.telegram,
@@ -82,7 +82,7 @@ export default {
         employees: this.employees,
         orders: this.orders,
         tickets: this.tickets,
-        feedbacks: this.feedbacks,
+        feedback: this.feedbacks,
         miners: this.miners,
       };
 
@@ -94,6 +94,28 @@ export default {
       } catch (err) {
         console.error(err);
         alert("Ошибка обновления");
+      }
+    },
+
+    async deleteEmploye() {
+      this.isloading = true;
+
+      const url = `/employees/${this.id}/delete`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        const response = await axios.post(url, {}, { headers });
+        console.log(response.data);
+        this.is_delete = false;
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        this.isloading = false;
+        this.$router.push({
+          name: "staff",
+        });
       }
     },
   },
@@ -108,6 +130,7 @@ export default {
   <LoadingSpinner v-if="isloading" />
   <section class="wrapper" v-else>
     <ModalAccept @close="is_open = false" @update="updateEmployee()" v-if="is_open" />
+    <ModalDelete @close="is_delete = false" @update="deleteEmploye()" v-if="is_delete" />
 
     <div class="group-title">
       <h1>{{ id }}</h1>
@@ -187,6 +210,9 @@ export default {
           <option value="admin">Администратор</option>
           <option value="operator">Оператор</option>
         </select>
+      </div>
+      <div class="actions-avatar">
+        <a class="delete" @click="is_delete = true">Удалить</a>
       </div>
       <button class="btn save" @click="is_open = true">Сохранить</button>
     </div>

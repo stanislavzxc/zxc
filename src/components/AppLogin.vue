@@ -2,9 +2,11 @@
 /* eslint-disable */
 import AppLogo from "./AppLogo.vue";
 import AppTerms from "./AppTerms.vue";
+import LoadingSpinner from "@/pages/LoadingSpinner.vue";
+import axios from "axios";
 export default {
   name: "AppLogin",
-  components: { AppLogo, AppTerms },
+  components: { AppLogo, AppTerms, LoadingSpinner },
   data() {
     return {
       email: "",
@@ -13,13 +15,14 @@ export default {
       message: "",
       emailInvalid: false,
       passInvalid: false,
+      isloading: false,
     };
   },
   methods: {
     goNext() {
       try {
         if (this.email && this.password) {
-          this.$router.push({ name: "enterCode" });
+          this.$router.push({ name: "main" });
         }
       } catch (err) {
         console.log(err);
@@ -55,12 +58,37 @@ export default {
         console.log(err);
       }
     },
+    async getToken() {
+      if (!this.email || !this.password) {
+        alert("Введите почту и пароль!");
+        return;
+      }
+      this.isloading = true;
+      const url = "/login";
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      const data = { email: this.email, password: this.password };
+      try {
+        const response = await axios.post(url, data, { headers });
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("employee", JSON.stringify(response.data.employee));
+        console.log(response.data, "asdasd");
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        alert("Ошибка");
+      } finally {
+        this.isloading = false;
+        this.$router.push({ name: "main" });
+      }
+    },
   },
   mounted() {},
 };
 </script>
 <template>
-  <div class="wrapper">
+  <LoadingSpinner v-if="isloading" />
+  <div class="wrapper" v-else>
     <AppLogo />
     <div class="card">
       <h2 class="title">Вход в систему</h2>
@@ -102,9 +130,7 @@ export default {
           @click="closePass()"
         />
       </div>
-      <button class="btn continue" type="button" @click="goNext()">
-        Войти
-      </button>
+      <button class="btn continue" type="button" @click="getToken()">Войти</button>
     </div>
     <div class=""></div>
   </div>
@@ -117,6 +143,9 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 20px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 h1 {
