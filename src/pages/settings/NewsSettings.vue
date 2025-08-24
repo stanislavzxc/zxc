@@ -1,14 +1,20 @@
 <script>
 import axios from "axios";
 import LoadingSpinner from "../LoadingSpinner.vue";
+import ModalAccept from "../ModalAccept.vue";
+import ModalDelete from "../ModalDelete.vue";
 export default {
   name: "NewsSettings",
-  components: { LoadingSpinner },
+  components: { LoadingSpinner, ModalAccept, ModalDelete },
+
   data() {
     return {
       count: 1,
       isloading: false,
-
+      is_open: false,
+      is_delete: false,
+      itemId: null,
+      item: null,
       news: [
         {
           new: "",
@@ -38,40 +44,43 @@ export default {
       }
     },
 
-    async updatefaq(item) {
-      if (!item.id) {
+    async updatefaq() {
+      if (!this.item.id) {
         console.error("ID новости не определен");
         return;
       }
       this.isloading = true;
 
-      const url = `/news/${item.id}/update`;
+      const url = `/news/${this.item.id}/update`;
       const headers = {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "application/json",
       };
 
       const data = {
-        title: item.title,
-        description: item.desc,
-        url: item.new,
-        image: item.image,
+        title: this.item.title,
+        description: this.item.desc,
+        url: this.item.new,
+        image: this.item.image,
       };
 
       try {
         const response = await axios.put(url, data, { headers });
         console.log("Новость обновлена:", response.data);
+        // alert("Новость успешно обновлена!");
       } catch (error) {
         console.error("Ошибка обновления новости:", error);
+        alert("Ошибка при обновлении новости");
       } finally {
+        this.is_open = false;
         this.isloading = false;
       }
     },
 
-    async deleteNew(id) {
+    async deleteNew() {
       this.isloading = true;
 
-      const url = `/news/${id}/delete`;
+      const url = `/news/${this.itemId}/delete`;
       const headers = {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
@@ -79,35 +88,33 @@ export default {
       try {
         const response = await axios.post(url, {}, { headers });
         console.log(response.data);
+        // alert("Новость удалена!");
       } catch (error) {
-        console.error("Ошибка обновления настроек:", error);
+        console.error("Ошибка удаления новости:", error);
+        alert("Ошибка при удалении новости");
       } finally {
+        this.is_delete = false;
         this.isloading = false;
         this.getfaq();
       }
     },
+
     async deleteLast() {
-      if (this.news.length === 0) return; // Check if array is empty
+      if (this.news.length === 0) return;
       this.isloading = true;
 
-      const lastItem = this.news[this.news.length - 1]; // Get the last item properly
+      const lastItem = this.news[this.news.length - 1];
       if (!lastItem?.id) {
         console.error("No valid news item to delete");
         return;
       }
-      const url = `/news/${lastItem.id}/delete`;
-      const headers = {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      };
 
       try {
-        const response = await axios.post(url, {}, { headers });
-        console.log(response.data);
+        await this.deleteNew(lastItem.id);
       } catch (error) {
-        console.error("Ошибка обновления настроек:", error);
+        console.error("Ошибка удаления:", error);
       } finally {
         this.isloading = false;
-        this.getfaq();
       }
     },
 
@@ -123,7 +130,7 @@ export default {
       const data = {
         title: "Новость",
         description: "Описание",
-        url: "www.exemple.com",
+        url: "www.example.com",
         image: "void",
       };
 
@@ -131,7 +138,7 @@ export default {
         const response = await axios.post(url, data, { headers });
         console.log(response.data);
       } catch (error) {
-        console.error("Error updating settings:", error);
+        console.error("Error creating news:", error);
       } finally {
         this.isloading = false;
       }
@@ -149,13 +156,13 @@ export default {
         this.news = response.data.map((item) => ({
           id: item.id,
           new: item.url || "",
-          image: item.image || "",
+          image: item.image || "void",
           title: item.title || "",
           desc: item.description || "",
         }));
         this.count = this.news.length;
       } catch (error) {
-        console.error("Error updating settings:", error);
+        console.error("Error fetching news:", error);
       } finally {
         this.isloading = false;
       }
@@ -169,15 +176,59 @@ export default {
       input.onchange = async (event) => {
         const file = event.target.files[0];
         if (file) {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            item.image = reader.result; // Сохраняем Base64 строку в item.img
-          };
-          reader.readAsDataURL(file); // Читаем файл как Data URL
+          try {
+            const base64Image = await this.convertFileToBase64(file);
+            item.image = base64Image;
+            // Автоматически сохраняем после изменения изображения
+          } catch (error) {
+            console.error("Ошибка обработки изображения:", error);
+            alert("Ошибка загрузки изображения");
+          }
         }
       };
 
-      input.click(); // Открываем диалог выбора файла
+      input.click();
+    },
+
+    async deleteImage(item) {
+      try {
+        // Устанавливаем изображение по умолчанию
+        const defaultImagePath = require("../../assets/deleted.jpg");
+        const response = await fetch(defaultImagePath);
+        const blob = await response.blob();
+        const base64Image = await this.convertBlobToBase64(blob);
+
+        item.image = base64Image;
+        // Автоматически сохраняем после удаления изображения
+      } catch (error) {
+        console.error("Ошибка удаления изображения:", error);
+      }
+    },
+
+    convertFileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+    },
+
+    convertBlobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+    },
+    modal_delete(id) {
+      this.is_delete = true;
+      this.itemId = id;
+    },
+    modal_update(item) {
+      this.is_open = true;
+      this.item = item;
     },
   },
   mounted() {
@@ -189,16 +240,19 @@ export default {
 <template>
   <LoadingSpinner v-if="isloading" />
   <section class="wrapper" v-else>
+    <ModalAccept @close="is_open = false" @update="updatefaq()" v-if="is_open" />
+    <ModalDelete @close="is_delete = false" @update="deleteNew()" v-if="is_delete" />
     <div class="card">
       <div class="group-title">
         <h2>Новости</h2>
         <div class="wrap-actions">
-          <img @click="minus" src="../../assets/minus.png" alt="" />
+          <img @click="minus" src="../../assets/minus.png" alt="Удалить" />
           <span>{{ count }}</span>
-          <img @click="plus" src="../../assets/plus.png" alt="" />
+          <img @click="plus" src="../../assets/plus.png" alt="Добавить" />
         </div>
       </div>
-      <div class="new" v-for="(item, i) in news" :key="i">
+
+      <div class="new" v-for="(item, i) in news" :key="item.id || i">
         <div class="group">
           <label for="new" class="group-value">Новость {{ i + 1 }}</label>
           <input
@@ -210,6 +264,7 @@ export default {
             placeholder="Link"
           />
         </div>
+
         <div class="wrap-group">
           <div class="group">
             <label for="title" class="group-value">Заголовок</label>
@@ -222,6 +277,7 @@ export default {
               placeholder="Заголовок"
             />
           </div>
+
           <div class="group">
             <label for="desc" class="group-value">Описание</label>
             <input
@@ -234,21 +290,45 @@ export default {
             />
           </div>
         </div>
+
         <div class="wrap-avatar">
           <div class="container-img" @click="selectImage(item)">
-            <img v-if="item.image != 'void'" :src="item.image" alt="News image" />
-            <img src="../../assets/image.png" alt="" v-else />
+            <img
+              v-if="item.image && item.image !== 'void'"
+              :src="item.image"
+              alt="News image"
+            />
+            <img v-else src="../../assets/image.png" alt="Default image" />
           </div>
+
           <div class="actions-avatar">
-            <a class="edit-img" @click="updatefaq(item)">Изменить</a>
-            <a class="delete-img" @click="deleteNew(item.id)">Удалить</a>
+            <a class="edit-img" @click="selectImage(item)"> Изменить</a>
+            <a class="delete-img" @click="deleteImage(item)"> Удалить</a>
           </div>
+        </div>
+
+        <div class="btn-cont">
+          <button class="edit-img" @click="modal_update(item)">Сохранить</button>
+          <button class="delete-img" @click="modal_delete(item.id)">Удалить</button>
         </div>
       </div>
     </div>
   </section>
 </template>
+
 <style scoped>
+.btn-cont {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.btn-cont button {
+  padding: 14.5px 24px;
+  border-radius: 8px;
+  background-color: #195ee6;
+  color: white;
+  width: 45%;
+}
 .wrapper {
   padding: 20px;
   display: flex;

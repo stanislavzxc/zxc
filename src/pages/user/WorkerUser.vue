@@ -1,15 +1,14 @@
 <script>
-  import axios from 'axios'
+import axios from "axios";
 export default {
   name: "WorkerUser",
   components: {},
   data() {
     return {
-
       worker_id: this.$route.params.id,
       status: "",
       headFrameID: "",
-      user: '',
+      user: "",
       dateConnect: "2024-08-26 11:20",
       fan1: "60",
       fan2: "20",
@@ -33,45 +32,45 @@ export default {
   },
   methods: {
     async fetchUsers() {
-      const url = `/workers/${this.worker_id}`; 
+      const url = `/workers/${this.worker_id}`;
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
         this.user = `ID ${response.data.user.id} (${response.data.user.email})`;
-        this.status = response.data.worker.status || 'Нет данных';
-        this.headFrameID = response.data.worker.headFrameID || 'Нет данных';
-        this.name = response.data.worker.name || 'Нет данных'
-        this.type = response.data.worker.behavior || 'Нет данных'
-        this.miner = response.data.miners_items.name || 'Нет данных'
-        this.dateConnect = response.data.worker.created || 'Нет данных';
-        console.log(this.user_id)
+        this.status = response.data.worker.status || "Нет данных";
+        this.headFrameID = response.data.worker.headFrameID || "Нет данных";
+        this.name = response.data.worker.name || "Нет данных";
+        this.type = response.data.worker.behavior || "Нет данных";
+        this.miner = response.data.miners_items.name || "Нет данных";
+        this.dateConnect = response.data.worker.created || "Нет данных";
+        console.log(this.user_id);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     },
-    async update(){
-     const url = `/workers/${this.worker_id}`; 
+    async update() {
+      const url = `/workers/${this.worker_id}`;
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`,
-        "Content-Type": "application/json" 
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
       };
       const data = {
         id_str: String(this.worker_id),
-        name:this.name,
-        behavior:this.type,
-        miner_item_id:'None',
-        hidden:this.invisible,
-      }
+        name: this.name,
+        behavior: this.type,
+        miner_item_id: "None",
+        hidden: this.invisible,
+      };
       try {
         const response = await axios.put(url, data, { headers });
-        console.log(response.data)
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
-    }
+    },
   },
   mounted() {
     this.fetchUsers();
@@ -82,7 +81,7 @@ export default {
   <section class="wrapper">
     <div class="group-title">
       <h1>Воркер #{{ worker_id }}</h1>
-      <button class="btn edit">Редактиовать</button>
+      <!-- <button class="btn edit">Редактиовать</button> -->
     </div>
     <div class="card">
       <div class="info-item">
@@ -155,15 +154,11 @@ export default {
       </div>
       <div class="info-item">
         <span class="info-title">Расход:</span>
-        <span class="info-value"
-          >{{ rashod_btc }} BTC ({{ rashod_usd }} $)</span
-        >
+        <span class="info-value">{{ rashod_btc }} BTC ({{ rashod_usd }} $)</span>
       </div>
       <div class="info-item">
         <span class="info-title">Прибыль:</span>
-        <span class="info-value"
-          >{{ profit_btc }} BTC ({{ profit_usd }} $)</span
-        >
+        <span class="info-value">{{ profit_btc }} BTC ({{ profit_usd }} $)</span>
       </div>
     </div>
     <div class="card">
@@ -206,15 +201,8 @@ export default {
         ></select>
       </div>
       <div class="wrap-check">
-        <input
-          type="checkbox"
-          v-model="invisible"
-          id="invisible"
-          class="checkbox"
-        />
-        <label for="invisible" class="group-value"
-          >Скрыть (Видимость аппарата)</label
-        >
+        <input type="checkbox" v-model="invisible" id="invisible" class="checkbox" />
+        <label for="invisible" class="group-value">Скрыть (Видимость аппарата)</label>
       </div>
       <button class="btn save" @click="update()">Сохранить</button>
     </div>

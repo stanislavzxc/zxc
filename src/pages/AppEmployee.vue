@@ -19,6 +19,7 @@ export default {
       telegram: "",
       role: "",
       image: "",
+      selectedFile: require("../assets/deleted.jpg"),
 
       users: true,
       employees: true,
@@ -63,11 +64,34 @@ export default {
       }
     },
 
+    async onFileChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.image = URL.createObjectURL(file); // Отображаем выбранное изображение
+        this.selectedFile = file; // Сохраняем файл для отправки на сервер
+      }
+    },
     /* обновление сотрудника */
     async updateEmployee() {
       if (!this.name || !this.email) {
         alert("Заполните имя и e-mail");
         return;
+      }
+
+      let imageBase64 = null;
+
+      // Если выбран файл, конвертируем его в base64
+      if (this.selectedFile && this.selectedFile instanceof File) {
+        try {
+          imageBase64 = await this.convertFileToBase64(this.selectedFile);
+        } catch (error) {
+          console.error("Ошибка конвертации изображения:", error);
+          alert("Ошибка обработки изображения");
+          return;
+        }
+      } else if (this.image && this.image.startsWith("data:image")) {
+        // Если изображение уже в base64 (например, после удаления)
+        imageBase64 = this.image;
       }
 
       const payload = {
@@ -76,8 +100,7 @@ export default {
         role: this.role,
         phone: this.phone,
         telegram: this.telegram,
-        image: this.image || null,
-
+        image: imageBase64,
         users: this.users,
         employees: this.employees,
         orders: this.orders,
@@ -88,13 +111,27 @@ export default {
 
       try {
         await axios.post(`/employees/update/${this.id}`, payload, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
         });
         this.is_open = false;
+        alert("Данные успешно обновлены!");
       } catch (err) {
         console.error(err);
         alert("Ошибка обновления");
       }
+    },
+
+    // Добавьте этот метод для конвертации файла в base64
+    convertFileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
     },
 
     async deleteEmploye() {
@@ -118,6 +155,22 @@ export default {
         });
       }
     },
+    async deleteImage() {
+      console.log("deleteImage called"); // Проверка вызова метода
+      // Создаем объект файла из изображения по умолчанию
+      const defaultImagePath = require("../assets/deleted.jpg"); // Путь к изображению
+      const response = await fetch(defaultImagePath);
+      const blob = await response.blob(); // Получаем Blob из изображения
+      // Создаем объект File
+      const file = new File([blob], "deleted.jpg", { type: "image/png" }); // Укажите правильный тип
+      // Устанавливаем изображение по умолчанию для отображения
+      this.image = defaultImagePath;
+      // Сбрасываем selectedFile и добавляем новый файл в FormData
+      this.selectedFile = file; // Сохраняем файл для отправки на сервер
+    },
+    selectImage() {
+      this.$refs.fileInput.click(); // Программно вызываем клик на скрытом input
+    },
   },
 
   mounted() {
@@ -140,13 +193,19 @@ export default {
       <h2>Общая информация</h2>
       <div class="wrap-avatar">
         <div class="container-img">
-          <img src="../assets/image.png" alt="" v-if="!image" />
-          <img :src="image" alt="" v-else />
+          <img :src="image ? image : '../assets/image.png'" alt="Майнер" />
         </div>
-
         <div class="actions-avatar">
-          <a class="edit-img">Изменить</a>
-          <a class="delete">Удалить</a>
+          <a class="edit-img" @click="selectImage">
+            Изменить
+            <input
+              type="file"
+              ref="fileInput"
+              @change="onFileChange"
+              style="display: none"
+            />
+          </a>
+          <a class="delete-img" @click="deleteImage">Удалить</a>
         </div>
       </div>
       <div class="wrap-group">

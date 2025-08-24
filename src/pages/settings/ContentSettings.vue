@@ -9,6 +9,7 @@ export default {
     return {
       id: "1",
       isloading: false,
+      miners: [],
 
       // calc
       min_calc: "",
@@ -191,10 +192,29 @@ export default {
         this.isloading = false;
       }
     },
+    async getMiners() {
+      this.isloading = true;
+
+      const url = `/miners`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        const response = await axios.get(url, { headers });
+        this.miners = response.data;
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching miners:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
   },
   mounted() {
     this.getinfo();
     this.getfaq();
+    this.getMiners();
     setTimeout(() => {
       const data = JSON.parse(localStorage.getItem("settings"));
       this.min_calc = data.invest_min || "";
@@ -318,7 +338,9 @@ export default {
           class="group-item"
           placeholder="Выберите майнер"
         >
-          <option value="1">1</option>
+          <option v-for="miner in miners" :key="miner.id" :value="miner.id">
+            {{ miner.id }}
+          </option>
         </select>
       </div>
       <div class="group">

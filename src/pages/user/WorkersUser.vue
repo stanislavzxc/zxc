@@ -1,120 +1,125 @@
 <script>
-import axios from 'axios'
+import axios from "axios";
+import LoadingSpinner from "../LoadingSpinner.vue";
 export default {
   fio: "WorkersUser",
-  components: {},
+  components: { LoadingSpinner },
   data() {
     return {
-      id:'',
+      id: "",
+      isloading: false,
       cards: [
-        {
-          id: 1,
-          name: "test",
-          type: "boundary",
-          mode: "HEM",
-          hash: "150",
-          miner: "1 - Antminer T21",
-          status: "Stable",
-          more: false,
-        },
-        {
-          id: 2,
-          name: "test",
-          type: "boundary",
-          mode: "HEM",
-          hash: "150",
-          miner: "1 - Antminer T21",
-          status: "Off",
-          more: false,
-        },
-        {
-          id: 3,
-          name: "test",
-          type: "boundary",
-          mode: "HEM",
-          hash: "150",
-          miner: "1 - Antminer T21",
-          status: "Unavailable",
-          more: false,
-        },
-        {
-          id: 4,
-          name: "test",
-          type: "boundary",
-          mode: "HEM",
-          hash: "150",
-          miner: "1 - Antminer T21",
-          status: "Stable",
-          more: false,
-        },
-        {
-          id: 5,
-          name: "test",
-          type: "boundary",
-          mode: "HEM",
-          hash: "150",
-          miner: "1 - Antminer T21",
-          status: "Stable",
-          more: false,
-        },
-        {
-          id: 6,
-          name: "test",
-          type: "boundary",
-          mode: "HEM",
-          hash: "150",
-          miner: "1 - Antminer T21",
-          status: "Stable",
-          more: false,
-        },
-        {
-          id: 7,
-          name: "test",
-          type: "boundary",
-          mode: "HEM",
-          hash: "150",
-          miner: "1 - Antminer T21",
-          status: "Stable",
-          more: false,
-        },
-        {
-          id: 8,
-          name: "test",
-          type: "boundary",
-          mode: "HEM",
-          hash: "150",
-          miner: "1 - Antminer T21",
-          status: "Stable",
-          more: false,
-        },
+        // {
+        //   id: 1,
+        //   name: "test",
+        //   type: "boundary",
+        //   mode: "HEM",
+        //   hash: "150",
+        //   miner: "1 - Antminer T21",
+        //   status: "Stable",
+        //   more: false,
+        // },
+        // {
+        //   id: 2,
+        //   name: "test",
+        //   type: "boundary",
+        //   mode: "HEM",
+        //   hash: "150",
+        //   miner: "1 - Antminer T21",
+        //   status: "Off",
+        //   more: false,
+        // },
+        // {
+        //   id: 3,
+        //   name: "test",
+        //   type: "boundary",
+        //   mode: "HEM",
+        //   hash: "150",
+        //   miner: "1 - Antminer T21",
+        //   status: "Unavailable",
+        //   more: false,
+        // },
+        // {
+        //   id: 4,
+        //   name: "test",
+        //   type: "boundary",
+        //   mode: "HEM",
+        //   hash: "150",
+        //   miner: "1 - Antminer T21",
+        //   status: "Stable",
+        //   more: false,
+        // },
+        // {
+        //   id: 5,
+        //   name: "test",
+        //   type: "boundary",
+        //   mode: "HEM",
+        //   hash: "150",
+        //   miner: "1 - Antminer T21",
+        //   status: "Stable",
+        //   more: false,
+        // },
+        // {
+        //   id: 6,
+        //   name: "test",
+        //   type: "boundary",
+        //   mode: "HEM",
+        //   hash: "150",
+        //   miner: "1 - Antminer T21",
+        //   status: "Stable",
+        //   more: false,
+        // },
+        // {
+        //   id: 7,
+        //   name: "test",
+        //   type: "boundary",
+        //   mode: "HEM",
+        //   hash: "150",
+        //   miner: "1 - Antminer T21",
+        //   status: "Stable",
+        //   more: false,
+        // },
+        // {
+        //   id: 8,
+        //   name: "test",
+        //   type: "boundary",
+        //   mode: "HEM",
+        //   hash: "150",
+        //   miner: "1 - Antminer T21",
+        //   status: "Stable",
+        //   more: false,
+        // },
       ],
     };
   },
   methods: {
-    async getworkers(){
-     const url = `https://totalminers.io/api/miners/workers`; 
+    async getworkers() {
+      this.isloading = true;
+      const url = `/workers`;
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
-       
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
-      
       try {
         const response = await axios.get(url, { headers });
-        console.log(response.data)
+        this.cards = response.data.all.find((w) => w.user_id === this.id);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
+      } finally {
+        this.isloading = false;
       }
-    }
     },
-  
-  mounted(){
-    this.id = localStorage.getItem('userid');
-    this.getworkers()
-  }
+  },
+
+  mounted() {
+    this.id = localStorage.getItem("userid");
+    this.getworkers();
+  },
 };
 </script>
 <template>
-  <div class="wrapper">
+  <LoadingSpinner v-if="isloading" />
+  <div class="wrapper" v-else>
     <div class="actions">
       <img src="../../assets/search-support.svg" alt="" class="search-img" />
       <input type="text" class="search" v-model="search" placeholder="Поиск" />
@@ -151,11 +156,7 @@ export default {
           </div></span
         >
         <div class="card-item more">
-          <img
-            @click="card.more = !card.more"
-            src="../../assets/more.svg"
-            alt=""
-          />
+          <img @click="card.more = !card.more" src="../../assets/more.svg" alt="" />
         </div>
         <div class="options" v-if="card.more">
           <button>Посмотреть</button>

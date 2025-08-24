@@ -247,9 +247,9 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
   // Разрешаем доступ к login только если нет токена
-  if (to.name === 'login') {
-    if (token) {
-      next({ name: 'main' }); // Если уже авторизован, перенаправляем на главную
+  if (to.name === 'main') {
+    if (!token) {
+      next({ name: 'login' }); // Если уже авторизован, перенаправляем на главную
     } else {
       next(); // Разрешаем доступ к login
     }

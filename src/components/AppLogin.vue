@@ -73,7 +73,6 @@ export default {
         const response = await axios.post(url, data, { headers });
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("employee", JSON.stringify(response.data.employee));
-        console.log(response.data, "asdasd");
       } catch (error) {
         console.error("Error fetching users:", error);
         alert("Ошибка");

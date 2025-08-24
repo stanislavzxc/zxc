@@ -1,28 +1,55 @@
 <script>
+import axios from "axios";
+import LoadingSpinner from "../LoadingSpinner.vue";
 export default {
   fio: "MinersUser",
-  components: {},
+  components: { LoadingSpinner },
   data() {
     return {
+      id: localStorage.getItem("userdata").id || 0,
+      miner_id: localStorage.getItem("userdata").miner_id || 0,
+      isloading: false,
       cards: [
-        {
-          id: 1,
-          name: "test",
-          count: "8",
-        },
-        {
-          id: 1,
-          name: "Antminer T21",
-          count: "9",
-        },
+        // {
+        //   id: 1,
+        //   name: "test",
+        //   count: "8",
+        // },
+        // {
+        //   id: 1,
+        //   name: "Antminer T21",
+        //   count: "9",
+        // },
       ],
     };
   },
-  methods: {},
+  methods: {
+    async getworkers() {
+      this.isloading = true;
+      const url = `/miners`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+      try {
+        const response = await axios.get(url, { headers });
+        this.cards = response.data.all.find((m) => m.id === this.miner_id);
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+  },
+  mounted() {
+    this.getworkers();
+  },
 };
 </script>
 <template>
-  <div class="wrapper">
+  <LoadingSpinner v-if="isloading" />
+
+  <div class="wrapper" v-else>
     <div class="actions">
       <img src="../../assets/search-support.svg" alt="" class="search-img" />
       <input type="text" class="search" v-model="search" placeholder="Поиск" />
