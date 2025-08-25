@@ -477,7 +477,9 @@ export default {
             v-model="miner_banner"
             class="group-item"
           >
-            <option value="Майнер 1">Майнер 1</option>
+            <option v-for="miner in miners" :key="miner.id" :value="miner.id">
+              {{ miner.name }}
+            </option>
           </select>
         </div>
         <div class="group">

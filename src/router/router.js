@@ -246,19 +246,20 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
-  // Разрешаем доступ к login только если нет токена
-  if (to.name === 'main') {
-    if (!token) {
-      next({ name: 'login' }); // Если уже авторизован, перенаправляем на главную
-    } else {
-      next(); // Разрешаем доступ к login
-    }
-  } 
-  // Для всех остальных маршрутов проверяем авторизацию
-  else if (!token) {
-    next({ name: 'login' }); // Нет токена - на login
-  } else {
-    next(); // Есть токен - разрешаем доступ
+
+  // Разрешаем доступ к /login всегда
+  if (to.name === 'login') {
+    next();
+    return;
   }
+
+  // Если пользователь не авторизован и пытается получить доступ к защищенным маршрутам
+  if (!token) {
+    next({ name: 'login' });
+    return;
+  }
+
+  // Если пользователь авторизован, разрешаем доступ ко всем маршрутам
+  next();
 });
 export default router;

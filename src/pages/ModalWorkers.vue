@@ -15,12 +15,12 @@
           />
         </div>
         <div class="group">
-          <label for="name" class="group-value">email</label>
+          <label for="name" class="group-value">id майнера-донора</label>
           <input
             type="text"
-            id="name"
-            name="name"
-            v-model="email"
+            id="donor"
+            name="donor"
+            v-model="donor"
             class="group-item"
             placeholder="Введите название"
           />
@@ -28,23 +28,23 @@
       </div>
       <div class="wrap-group">
         <div class="group">
-          <label for="name" class="group-value">телефон</label>
+          <label for="name" class="group-value">Хешрейт</label>
           <input
             type="text"
-            id="name"
-            name="name"
-            v-model="phone"
+            id="hashrate"
+            name="hashrate"
+            v-model="hashrate"
             class="group-item"
             placeholder="Введите название"
           />
         </div>
         <div class="group">
-          <label for="name" class="group-value">telegram</label>
+          <label for="name" class="group-value">тип хешрейта</label>
           <input
             type="text"
-            id="name"
-            name="name"
-            v-model="telegram"
+            id="hash_type"
+            name="hash_type"
+            v-model="hash_type"
             class="group-item"
             placeholder="Введите название"
           />
@@ -52,21 +52,26 @@
       </div>
       <div class="wrap-group">
         <div class="group">
-          <label for="status" class="group-value">роль:</label>
-          <select type="text" id="role" name="role" v-model="role" class="group-item">
-            <option value="admin">Админ</option>
-            <option value="operator">Оператор</option>
+          <label for="status" class="group-value">майнер:</label>
+          <select
+            type="text"
+            id="role"
+            name="role"
+            v-model="miner_item_id"
+            class="group-item"
+          >
+            <option v-for="miner in miners" :value="miner.id" :key="miner.id">
+              {{ miner.id }}
+            </option>
           </select>
         </div>
         <div class="group">
-          <label for="name" class="group-value">пароль</label>
-          <input
-            type="text"
-            id="password"
-            name="password"
-            v-model="password"
-            class="group-item"
-          />
+          <label for="status" class="group-value">пользователь:</label>
+          <select type="text" id="id" name="id" v-model="userid" class="group-item">
+            <option v-for="user in users" :value="user.id" :key="user.id">
+              {{ user.id }}
+            </option>
+          </select>
         </div>
       </div>
 
@@ -79,15 +84,18 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   data() {
     return {
       name: "",
-      phone: "",
-      telegram: "",
-      role: "",
-      password: "",
-      email: "",
+      donor: "",
+      hashrate: "",
+      hash_type: "",
+      miner_item_id: "",
+      miners: [],
+      users: [],
+      userid: "",
     };
   },
   methods: {
@@ -97,15 +105,53 @@ export default {
     update() {
       this.$emit("update", {
         name: this.name,
-        email: this.email,
-        phone: this.phone,
-        telegram: this.telegram,
-        role: this.role,
-        password: this.password,
+        donor: this.donor,
+        hashrate: this.hashrate,
+        hash_type: this.hash_type,
+        miner_item_id: this.miner_item_id,
+        userid: this.userid,
       });
+    },
+    async getMiners() {
+      this.isloading = true;
+
+      const url = `/miners`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        const response = await axios.get(url, { headers });
+        this.miners = response.data;
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching miners:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+    async getusers() {
+      this.isloading = true;
+
+      const url = `/users`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        const response = await axios.get(url, { headers });
+        this.users = response.data;
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching miners:", error);
+      } finally {
+        this.isloading = false;
+      }
     },
   },
   mounted() {
+    this.getMiners();
+    this.getusers();
     document.body.style.overflow = "hidden";
   },
   unmounted() {

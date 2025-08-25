@@ -36,28 +36,23 @@ export default {
         console.error("Error fetching users:", error);
       }
     },
-    async create() {
-      const url = "/workers/1/create";
+    async create(workerData) {
+      const id = workerData.userid;
+      const url = `/workers/${id}/create`; // Убедитесь, что URL правильный
       const headers = {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
-      };
-      // После получения списка выберите нужный UUID
-      const donorMinerId = "550e8400-e29b-41d3-a456-426614174000";
-
-      const data = {
-        name: "testworker",
-        donor_miner_id: donorMinerId, // Правильный UUID
-        hash_rate: 4294967299,
-        hash_type: "TH",
-        miner_item_id: 9,
+        "Content-Type": "application/json",
       };
 
       try {
-        const response = await axios.post(url, data, { headers });
-
+        const response = await axios.post(url, workerData, { headers });
         console.log(response.data);
+        // Здесь вы можете добавить логику, чтобы обновить список работников или закрыть модальное окно
+        this.fetchUsers(); // Обновление списка работников после создания
+        this.is_open = false; // Закрыть модальное окно
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error creating worker:", error);
+        alert("Ошибка");
       }
     },
     async mainData() {
