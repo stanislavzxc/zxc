@@ -1,54 +1,61 @@
 <script>
-import axios from 'axios'
+import axios from "axios";
+import ModalWorkers from "./ModalWorkers.vue";
 export default {
   name: "AppWorkers",
+  components: { ModalWorkers },
   data() {
     return {
-      active: '',
-      offline: '',
+      active: "",
+      offline: "",
       totalHash: "",
-      search: '', 
+      search: "",
       cards: [],
+      is_open: false,
     };
   },
   methods: {
     open(userId) {
       try {
-        this.$router.push({ name: "worker", params:{id:userId}});
+        this.$router.push({ name: "worker", params: { id: userId } });
       } catch (err) {
         console.log(err);
       }
     },
     async fetchUsers() {
-      const url = "/workers"; 
+      const url = "/workers";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
         this.cards = response.data.all;
-        console.log(response.data) 
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     },
     async create() {
-      const url = "/workers/1/create"; 
+      const url = "/workers/1/create";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
+      // После получения списка выберите нужный UUID
+      const donorMinerId = "550e8400-e29b-41d3-a456-426614174000";
+
       const data = {
-        name:'testmorker',
-        donor_miner_id: 9,
+        name: "testworker",
+        donor_miner_id: donorMinerId, // Правильный UUID
         hash_rate: 4294967299,
-        hash_type:'TH',
+        hash_type: "TH",
         miner_item_id: 9,
-      }
+      };
+
       try {
         const response = await axios.post(url, data, { headers });
 
-        console.log(response.data) 
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -57,17 +64,15 @@ export default {
       let url = "/main";
 
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
 
-        this.active = response.data.offline_workers ;
-        this.offline = response.data.online_workers ;
-        this.totalHash = response.data.total_hashrate 
-
-        
+        this.active = response.data.offline_workers;
+        this.offline = response.data.online_workers;
+        this.totalHash = response.data.total_hashrate;
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -75,7 +80,7 @@ export default {
   },
   computed: {
     filteredCards() {
-      return this.cards.filter(card => {
+      return this.cards.filter((card) => {
         return (
           card.name.toLowerCase().includes(this.search.toLowerCase()) ||
           card.behavior.toLowerCase().includes(this.search.toLowerCase()) //||
@@ -84,16 +89,17 @@ export default {
       });
     },
   },
-  mounted(){
+  mounted() {
     this.mainData();
     this.fetchUsers();
     // this.create();
-  }
+  },
 };
 </script>
 
 <template>
   <div class="wrapper">
+    <ModalWorkers @close="is_open = false" @update="create" v-if="is_open" />
     <div class="wrap-title">
       <h1>Воркеры</h1>
       <div class="stat">
@@ -105,6 +111,7 @@ export default {
         <span>{{ offline }}</span>
       </div>
       <span class="totalHash">{{ totalHash }}</span>
+      <button class="btn add_user" @click="is_open = true">Создать воркер</button>
     </div>
     <div class="actions">
       <img src="../assets/search-support.svg" alt="" class="search-img" />
@@ -122,13 +129,18 @@ export default {
       <span class="options-field"></span>
     </div>
     <div class="cards">
-      <div class="card" @click="open(card.id)" v-for="card in filteredCards" :key="card.id">
+      <div
+        class="card"
+        @click="open(card.id)"
+        v-for="card in filteredCards"
+        :key="card.id"
+      >
         <span class="card-item">{{ card.id }}</span>
         <span class="card-item">{{ card.name }}</span>
         <span class="card-item">{{ card.behavior }}</span>
         <span class="card-item">{{ card.is_active }}</span>
-        <span class="card-item">{{ card.hash || 'Нет данных'}}</span>
-        <span class="card-item">{{ card.miner || 'Нет данных'}}</span>
+        <span class="card-item">{{ card.hash || "Нет данных" }}</span>
+        <span class="card-item">{{ card.miner || "Нет данных" }}</span>
         <span class="card-item">
           <div
             class="status"
@@ -142,11 +154,7 @@ export default {
           </div>
         </span>
         <div class="card-item more">
-          <img
-            @click.stop="card.more = !card.more"
-            src="../assets/more.svg"
-            alt=""
-          />
+          <img @click.stop="card.more = !card.more" src="../assets/more.svg" alt="" />
         </div>
         <div class="options" v-if="card.more">
           <button>Посмотреть</button>
