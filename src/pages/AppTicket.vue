@@ -485,6 +485,14 @@ h2 {
   align-items: center;
   gap: 10px;
 }
+@media (max-width: 450px) {
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-direction: column;
+  }
+}
 
 .field-item {
   font-weight: 500;

@@ -18,50 +18,7 @@ export default {
       template_id: null,
       // user_ids_str: "",
       mails: [],
-      users: [
-        {
-          id: 1,
-          email: "genadiu@mail.com",
-          last_send: "2024-08-26 11:20",
-          last_mail: "Шаблон 1",
-          status: true,
-        },
-        {
-          id: 2,
-          email: "genadiu@mail.com",
-          last_send: "2024-08-26 11:20",
-          last_mail: "Шаблон 1",
-          status: true,
-        },
-        {
-          id: 3,
-          email: "genadiu@mail.com",
-          last_send: "2024-08-26 11:20",
-          last_mail: "Шаблон 1",
-          status: true,
-        },
-        {
-          id: 4,
-          email: "genadiu@mail.com",
-          last_send: "2024-08-26 11:20",
-          last_mail: "Шаблон 1",
-          status: true,
-        },
-        {
-          id: 5,
-          email: "genadiu@mail.com",
-          last_send: "2024-08-26 11:20",
-          last_mail: "Шаблон 1",
-          status: true,
-        },
-        {
-          id: 6,
-          email: "genadiu@mail.com",
-          last_send: "2024-08-26 11:20",
-          last_mail: "Шаблон 1",
-          status: true,
-        },
-      ],
+      users: [],
     };
   },
   methods: {
@@ -387,6 +344,9 @@ h2 {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(140, 147, 166, 1);
+  word-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
 }
 .miners {
   width: 100%;

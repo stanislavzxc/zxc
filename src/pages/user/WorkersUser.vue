@@ -263,6 +263,34 @@ export default {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+@media (max-width: 450px) {
+  .fields span {
+    width: 25%;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 19.12px;
+    color: rgba(140, 147, 166, 1);
+    word-wrap: break-word;
+    white-space: normal;
+    hyphens: auto;
+    margin: 4px !important;
+  }
+}
+@media (max-width: 400px) {
+  .fields span {
+    width: 17%;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 19.12px;
+    color: rgba(140, 147, 166, 1);
+    word-wrap: break-word;
+    white-space: normal;
+    hyphens: auto;
+    margin: 4px !important;
+  }
 }
 
 .more {

@@ -1,20 +1,19 @@
 <script>
-import axios from 'axios';
-import LoadingSpinner from './LoadingSpinner.vue';
+import axios from "axios";
+import LoadingSpinner from "./LoadingSpinner.vue";
 export default {
   name: "AppPayments",
-  components:{LoadingSpinner},
+  components: { LoadingSpinner },
   data() {
     return {
-      search: '', 
-      isloading:false,
+      search: "",
+      isloading: false,
       cards: [],
     };
   },
   computed: {
     filteredCards() {
-
-      return this.cards.filter(card => {
+      return this.cards.filter((card) => {
         return (
           card.type.toLowerCase().includes(this.search.toLowerCase()) ||
           card.status.toLowerCase().includes(this.search.toLowerCase())
@@ -25,57 +24,56 @@ export default {
   methods: {
     open(cardId, userid) {
       try {
-        this.$router.push({ name: "payment", params: {id: cardId, userid: userid} });
+        this.$router.push({ name: "payment", params: { id: cardId, userid: userid } });
       } catch (err) {
         console.log(err);
       }
     },
     async fetchUsers() {
       this.isloading = true;
-      const url = "/billings"; 
+      const url = "/billings";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
       try {
         const response = await axios.get(url, { headers });
         this.cards = response.data.billings;
         // this.cards.reverse();
         for (let i = 0; i < this.cards.length; i++) {
-          if (this.cards[i].state === 'waiting') {
-            this.cards[i].state = 'Ожидание';
-          } else if(this.cards[i].state === 'canceled'){
-            this.cards[i].state = 'Отклонен';
-          }else if(this.cards[i].state === 'confirmation'){
-            this.cards[i].state = 'В процессе';
-          }else if(this.cards[i].state === 'completed'){
-            this.cards[i].state = 'Готово';
+          if (this.cards[i].state === "waiting") {
+            this.cards[i].state = "Ожидание";
+          } else if (this.cards[i].state === "canceled") {
+            this.cards[i].state = "Отклонен";
+          } else if (this.cards[i].state === "confirmation") {
+            this.cards[i].state = "В процессе";
+          } else if (this.cards[i].state === "completed") {
+            this.cards[i].state = "Готово";
           }
           // else if(this.cards[i].state === 'invoiced'){
           //   this.cards[i].state = 'Выставлен счет';
           // }
-          if(this.cards[i].type === 'buy_request'){
-            this.cards[i].type = 'Покупка';
-          }else{
-            this.cards[i].type = 'Хостинг';
-
+          if (this.cards[i].type === "buy_request") {
+            this.cards[i].type = "Покупка";
+          } else {
+            this.cards[i].type = "Хостинг";
           }
         }
-        console.log(response.data)
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
+      } finally {
         this.isloading = false;
       }
     },
   },
-  mounted(){
+  mounted() {
     this.fetchUsers();
-  }
+  },
 };
 </script>
 
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <div class="wrapper" v-else>
     <h1>Оплаты</h1>
     <div class="actions">
@@ -94,9 +92,16 @@ export default {
       <span class="options-field"></span>
     </div>
     <div class="cards">
-      <div class="card" @click="open(card.id, card.user.id)" v-for="card in filteredCards" :key="card.id"> 
+      <div
+        class="card"
+        @click="open(card.id, card.user.id)"
+        v-for="card in filteredCards"
+        :key="card.id"
+      >
         <span class="card-item">{{ card.id }}</span>
-        <span class="card-item card-item-open" @click="$router.push({name: 'users'})">ID {{ card.user.id }}</span>
+        <span class="card-item card-item-open" @click="$router.push({ name: 'users' })"
+          >ID {{ card.user.id }}</span
+        >
         <span class="card-item">{{ card.type }}</span>
         <span class="card-item">{{ card.value_usd }} USD</span>
         <span class="card-item" v-if="card.payment_type == 'rus_card'">Tranzilla</span>
@@ -116,11 +121,7 @@ export default {
         </span>
         <span class="card-item">{{ card.created }}</span>
         <div class="card-item more">
-          <img
-            @click="card.more = !card.more"
-            src="../assets/more.svg"
-            alt=""
-          />
+          <img @click="card.more = !card.more" src="../assets/more.svg" alt="" />
         </div>
         <div class="options" v-if="card.more">
           <button>Посмотреть</button>
@@ -217,6 +218,9 @@ h1 {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(140, 147, 166, 1);
+  word-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
 }
 .cards {
   width: 100%;
@@ -237,11 +241,13 @@ h1 {
 }
 
 .card-item {
-  width: 12%;
+  width: 25%;
   font-weight: 500;
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {

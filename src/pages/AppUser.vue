@@ -7,7 +7,7 @@ import TicketsUser from "./user/TicketsUser.vue";
 import MinersUser from "./user/MinersUser.vue";
 export default {
   name: "AppUser",
-  components: { PesonalData, WorkersUser, TicketsUser, MinersUser, LoadingSpinner},
+  components: { PesonalData, WorkersUser, TicketsUser, MinersUser, LoadingSpinner },
   data() {
     return {
       id: this.$route.params.id,
@@ -38,38 +38,36 @@ export default {
       this.isloading = true;
       const url = `users/${this.id}`;
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
-        localStorage.setItem('userdata', JSON.stringify(response.data));
-        this.changeData(response.data)
-        console.log(response.data)
+        localStorage.setItem("userdata", JSON.stringify(response.data));
+        this.changeData(response.data);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
+      } finally {
         this.isloading = false;
       }
     },
-    changeData(data){
+
+    changeData(data) {
       this.id = data.id;
       this.email = data.email;
-    }
+    },
   },
   mounted() {
-      localStorage.setItem('userid_tickets', this.id)
+    localStorage.setItem("userid_tickets", this.id);
 
-      this.fetchUsers();
+    this.fetchUsers();
     this.checkQuery();
-    
-    
   },
-
 };
 </script>
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <main class="wrapper" v-else>
     <div class="group-title">
       <h1>
@@ -78,32 +76,16 @@ export default {
       <!-- <button class="btn edit">Редактировать</button> -->
     </div>
     <div class="wrap-btns">
-      <button
-        class="btn"
-        @click="changeStat(1)"
-        :class="{ active: active == 1 }"
-      >
+      <button class="btn" @click="changeStat(1)" :class="{ active: active == 1 }">
         Личные данные
       </button>
-      <button
-        class="btn"
-        @click="changeStat(2)"
-        :class="{ active: active == 2 }"
-      >
+      <button class="btn" @click="changeStat(2)" :class="{ active: active == 2 }">
         Воркеры
       </button>
-      <button
-        class="btn"
-        @click="changeStat(3)"
-        :class="{ active: active == 3 }"
-      >
+      <button class="btn" @click="changeStat(3)" :class="{ active: active == 3 }">
         Асики клиента
       </button>
-      <button
-        class="btn"
-        @click="changeStat(4)"
-        :class="{ active: active == 4 }"
-      >
+      <button class="btn" @click="changeStat(4)" :class="{ active: active == 4 }">
         Тикеты клиента
       </button>
     </div>
@@ -114,6 +96,18 @@ export default {
   </main>
 </template>
 <style scoped>
+@media (max-width: 450px) {
+  .btn {
+    padding: 10px !important;
+  }
+  .group {
+    flex-direction: column !important;
+  }
+  .btn-btn-action {
+    display: flex !important;
+    justify-content: center !important;
+  }
+}
 .wrapper {
   width: 100%;
   display: flex;

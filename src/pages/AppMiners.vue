@@ -243,6 +243,9 @@ h1 {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(140, 147, 166, 1);
+  word-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
 }
 .cards {
   width: 100%;
@@ -263,11 +266,13 @@ h1 {
 }
 
 .card-item {
-  width: 12%;
+  width: 25%;
   font-weight: 500;
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {

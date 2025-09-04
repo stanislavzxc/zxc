@@ -1,6 +1,6 @@
 <template>
   <div class="overlay">
-    <div class="modal">
+    <div class="modal" id="Acceptmodal" :style="modalStyle">
       <h1>Сохранить Изменения</h1>
       <h6>Вы действительно хотите внести изменения?</h6>
       <div class="btns">
@@ -13,6 +13,17 @@
 
 <script>
 export default {
+  data() {
+    return {
+      windowWidth: window.innerWidth, // Реактивная ширина окна
+    };
+  },
+  computed: {
+    modalStyle() {
+      // Динамический стиль: width: auto если <450px, иначе по умолчанию (500px из CSS)
+      return this.windowWidth < 450 ? { width: "auto !important" } : {};
+    },
+  },
   methods: {
     cancel() {
       this.$emit("close");
@@ -20,9 +31,16 @@ export default {
     update() {
       this.$emit("update");
     },
+    handleResize() {
+      this.windowWidth = window.innerWidth; // Обновляем при изменении размера
+    },
   },
   mounted() {
     document.body.style.overflow = "hidden";
+    window.addEventListener("resize", this.handleResize); // Слушаем изменения размера
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.handleResize); // Убираем слушатель при размонтировании
   },
 };
 </script>
@@ -32,6 +50,7 @@ export default {
   display: flex;
   justify-content: space-around;
 }
+
 .btn {
   padding: 14.5px 24px;
   border-radius: 8px;
@@ -40,6 +59,7 @@ export default {
   transition: all 500ms ease;
   width: 45%;
 }
+
 .save {
   background-color: #195ee6;
   color: #fff;
@@ -48,22 +68,22 @@ export default {
 
 .delete {
   border: 1px solid #dc2626;
-
   color: #dc2626;
   font-weight: 600;
 }
+
 .overlay {
   position: fixed;
-  width: 100%; /* Измените на 100% для полного покрытия */
+  width: 100vw; /* Полное покрытие экрана */
   height: 100vh;
-  backdrop-filter: blur(10px); /* Убедитесь, что значение подходит */
-  top: 0; /* Добавьте это, чтобы позиционировать overlay */
-  left: 0; /* Добавьте это, чтобы позиционировать overlay */
-  z-index: 9998; /* Убедитесь, что z-index выше, чем у других элементов */
+  backdrop-filter: blur(10px);
+  top: 0;
+  left: 0;
+  z-index: 9998;
 }
 
 .modal {
-  width: 500px;
+  width: 500px; /* По умолчанию */
   height: auto;
   margin: auto;
   margin-top: 15%;
@@ -72,10 +92,12 @@ export default {
   text-align: center;
   flex-direction: column;
   gap: 15px;
-  background-color: rgba(255, 255, 255, 0.9); /* Добавьте непрозрачность */
+  background-color: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); /* Убедитесь, что тень видна */
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
   position: relative;
-  z-index: 9999; /* Убедитесь, что z-index выше, чем у overlay */
+  z-index: 9999;
 }
+
+/* Убрали медиа-запрос, чтобы не конфликтовать с Vue-стилями */
 </style>

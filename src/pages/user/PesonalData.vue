@@ -165,6 +165,8 @@ export default {
       qwe: "",
       billingminers: [],
       buy_request: [],
+      mails: [],
+      template_id: "",
     };
   },
   components: { LoadingSpinner },
@@ -422,6 +424,55 @@ export default {
         this.isloading = false;
       }
     },
+    async getMails() {
+      this.isloading = true;
+      const url = `/mail_templates`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      try {
+        const response = await axios.get(url, { headers });
+        console.log(response.data);
+
+        // Фильтруем только элементы с template_type == 'mail' и преобразуем их
+        this.mails = response.data
+          .filter((item) => item.template_type === "mail")
+          .map((item) => ({
+            id: item.id,
+            name: item.title,
+            template: item.content,
+            template_type: item.template_type,
+          }));
+      } catch (error) {
+        console.error("Error updating settings:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+    async updateMail() {
+      this.is_open = false;
+      this.isloading = true;
+      const url = `/campaign/send`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+
+      const data = {
+        template_id: this.template_id,
+        user_ids: this.id.toString(),
+      };
+      console.log(data);
+      try {
+        const response = await axios.post(url, data, { headers });
+        console.log(response);
+      } catch (error) {
+        console.error("Error uploading data:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
   },
 
   mounted() {
@@ -431,8 +482,8 @@ export default {
       const user = userData ? JSON.parse(userData) : {};
       this.updateData(user);
       this.discount_getall();
-      this.discount_delete();
       this.billings();
+      this.getMails();
       // this.fetchJui();
     }, 1000);
   },
@@ -863,15 +914,17 @@ export default {
       <h2>Рассылка</h2>
       <div class="group">
         <label for="mailing" class="group-value">Письмо</label>
-        <select id="mailing" class="group-item" v-model="mailing">
-          <option value="">Шаблон 1</option>
+        <select id="mailing" class="group-item" v-model="template_id">
+          <option v-for="mail in mails" :key="mail.id" :value="mail.id">
+            {{ mail.name }}
+          </option>
         </select>
       </div>
-      <div class="wrap-check">
+      <!-- <div class="wrap-check">
         <input type="checkbox" id="mailingCheck" class="checkbox" />
-        <label for="mailingCheck">Включен в рассылку</label>
-      </div>
-      <button class="btn send">Отправить</button>
+         <label for="mailingCheck">Включен в рассылку</label> 
+      </div> -->
+      <button class="btn send" @click="updateMail()">Отправить</button>
     </div>
     <div class="card">
       <h2>Действия</h2>

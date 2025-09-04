@@ -43,9 +43,17 @@ export default {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "application/json",
       };
-
+      const data = {
+        name: workerData.name,
+        donor_miner_id: workerData.donor_miner_id,
+        hash_rate: workerData.hash_rate,
+        hash_type: workerData.hash_type,
+        miner_item_id: workerData.miner_item_id,
+      };
+      console.log(data);
       try {
-        const response = await axios.post(url, workerData, { headers });
+        const response = await axios.post(url, data, { headers });
+        console.log(data);
         console.log(response.data);
         // Здесь вы можете добавить логику, чтобы обновить список работников или закрыть модальное окно
         this.fetchUsers(); // Обновление списка работников после создания
@@ -257,6 +265,8 @@ export default {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {

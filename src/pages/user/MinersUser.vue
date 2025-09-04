@@ -166,6 +166,8 @@ export default {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {

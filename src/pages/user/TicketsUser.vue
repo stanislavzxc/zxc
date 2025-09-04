@@ -1,65 +1,62 @@
 <script>
-import axios from 'axios';
-import LoadingSpinner from '../LoadingSpinner.vue';
+import axios from "axios";
+import LoadingSpinner from "../LoadingSpinner.vue";
 export default {
   fio: "TicketsUser",
-  components: {LoadingSpinner},
+  components: { LoadingSpinner },
   data() {
     return {
       cards: [],
       isloading: false,
-      id:null,
-      search: '',
+      id: null,
+      search: "",
     };
-    
   },
-  methods:{
+  methods: {
     async fetchTickets() {
       this.isloading = true;
-      const url = "/tickets"; 
+      const url = "/tickets";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
-        console.log(response.data)
-         for (let i = 0; i < response.data.length; i++) {
-           if(response.data[i].user.id == this.id)
-           this.cards.push(response.data[i]);
-         }
-       
-         for (let i = 0; i < this.cards.length; i++) {
-           this.cards[i].is_open = this.cards[i].is_open ? 'Открыт' : 'Закрыт';
-         }
+        console.log(response.data);
+        for (let i = 0; i < response.data.length; i++) {
+          if (response.data[i].user.id == this.id) this.cards.push(response.data[i]);
+        }
+
+        for (let i = 0; i < this.cards.length; i++) {
+          this.cards[i].is_open = this.cards[i].is_open ? "Открыт" : "Закрыт";
+        }
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
-      this.isloading = false;
+      } finally {
+        this.isloading = false;
       }
     },
   },
   computed: {
     filteredCards() {
-
-      return this.cards.filter(card => {
+      return this.cards.filter((card) => {
         return (
-          `${card.firstname} ${card.lastname}`.toLowerCase().includes(this.search.toLowerCase()) ||
+          `${card.firstname} ${card.lastname}`
+            .toLowerCase()
+            .includes(this.search.toLowerCase()) ||
           card.title.toLowerCase().includes(this.search.toLowerCase())
         );
       });
     },
   },
-  mounted(){
-    this.id = localStorage.getItem('userid_tickets')
+  mounted() {
+    this.id = localStorage.getItem("userid_tickets");
     this.fetchTickets();
-  }
-
-  
+  },
 };
 </script>
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <div class="wrapper" v-else>
     <div class="actions">
       <img src="../../assets/search-support.svg" alt="" class="search-img" />
@@ -74,7 +71,12 @@ export default {
       <span class="options-field"></span>
     </div>
     <div class="cards">
-      <div class="card" v-for="card in filteredCards" :key="card.id" @click="$router.push({ name: 'tickets' })">
+      <div
+        class="card"
+        v-for="card in filteredCards"
+        :key="card.id"
+        @click="$router.push({ name: 'tickets' })"
+      >
         <span class="card-item">{{ card.id }}</span>
         <span class="card-item">{{ card.title }}</span>
         <span class="card-item"
@@ -90,11 +92,7 @@ export default {
         >
         <span class="card-item">{{ card.created }}</span>
         <div class="card-item more">
-          <img
-            @click="card.more = !card.more"
-            src="../../assets/more.svg"
-            alt=""
-          />
+          <img @click="card.more = !card.more" src="../../assets/more.svg" alt="" />
         </div>
         <div class="options" v-if="card.more">
           <button>Посмотреть</button>
@@ -183,7 +181,22 @@ export default {
   flex-direction: column;
   gap: 5px;
 }
-
+@media (max-width: 450px) {
+  .fields span {
+    width: 25%;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 19.12px;
+    color: rgba(140, 147, 166, 1);
+    word-wrap: break-word;
+    white-space: normal;
+    hyphens: auto;
+    margin: 5px !important;
+  }
+  .card {
+    gap: 5px;
+  }
+}
 .card {
   position: relative;
   background-color: #fff;
@@ -201,6 +214,8 @@ export default {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {

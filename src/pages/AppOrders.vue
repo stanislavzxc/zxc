@@ -1,27 +1,27 @@
 <script>
-import axios from 'axios';
-import LoadingSpinner from './LoadingSpinner.vue';
+import axios from "axios";
+import LoadingSpinner from "./LoadingSpinner.vue";
 export default {
   name: "AppOrders",
-  components:{LoadingSpinner},
+  components: { LoadingSpinner },
   data() {
     return {
       cards: [],
-      search: '',
+      search: "",
       isloading: false,
     };
   },
   computed: {
     filteredCards() {
-      return this.cards.filter(card => {
+      return this.cards.filter((card) => {
         return card.name.toLowerCase().includes(this.search.toLowerCase());
       });
     },
   },
   methods: {
-    open(cardId,card) {
+    open(cardId, card) {
       try {
-        localStorage.setItem('state', card);
+        localStorage.setItem("state", card);
         this.$router.push({ name: "order", params: { id: cardId } });
       } catch (err) {
         console.log(err);
@@ -29,42 +29,41 @@ export default {
     },
     async fetchUsers() {
       this.isloading = true;
-      const url = "/buy/requests"; 
+      const url = "/buy/requests";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
-        console.log(response.data)
-        this.cards = response.data; 
+        console.log(response.data);
+        this.cards = response.data;
         for (let i = 0; i < this.cards.length; i++) {
-          if (this.cards[i].state === 'wait') {
-            this.cards[i].state = 'Ожидает';
-          } else if (this.cards[i].state === 'in_work') {
-            this.cards[i].state = 'В процессе';
-          } else if (this.cards[i].state === 'completed') {
-            this.cards[i].state = 'Готово';
-          } else if (this.cards[i].state === 'cancelled') {
-            this.cards[i].state = 'Отменено';
+          if (this.cards[i].state === "wait") {
+            this.cards[i].state = "Ожидает";
+          } else if (this.cards[i].state === "in_work") {
+            this.cards[i].state = "В процессе";
+          } else if (this.cards[i].state === "completed") {
+            this.cards[i].state = "Готово";
+          } else if (this.cards[i].state === "cancelled") {
+            this.cards[i].state = "Отменено";
           }
         }
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
-      this.isloading = false;
+      } finally {
+        this.isloading = false;
       }
     },
-    
   },
   mounted() {
     this.fetchUsers();
-  }
+  },
 };
 </script>
 
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <div class="wrapper" v-else>
     <h1>Заказы</h1>
     <div class="actions">
@@ -80,7 +79,12 @@ export default {
       <span class="options-field"></span>
     </div>
     <div class="cards">
-      <div class="card" @click="open(card.id, card.state)" v-for="card in filteredCards" :key="card.id">
+      <div
+        class="card"
+        @click="open(card.id, card.state)"
+        v-for="card in filteredCards"
+        :key="card.id"
+      >
         <span class="card-item">{{ card.id }}</span>
         <span class="card-item">{{ card.name }}</span>
         <span class="card-item">{{ card.created }}</span>
@@ -98,11 +102,7 @@ export default {
           </div>
         </span>
         <div class="card-item more">
-          <img
-            @click="card.more = !card.more"
-            src="../assets/more.svg"
-            alt=""
-          />
+          <img @click="card.more = !card.more" src="../assets/more.svg" alt="" />
         </div>
         <div class="options" v-if="card.more">
           <button>Посмотреть</button>
@@ -125,7 +125,7 @@ export default {
   background-color: #f0feed;
   color: #259800;
 }
-.process{
+.process {
   background-color: #edf5fe;
   color: #3083ff;
 }
@@ -211,6 +211,9 @@ h1 {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(140, 147, 166, 1);
+  word-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
 }
 .cards {
   width: 100%;
@@ -231,11 +234,13 @@ h1 {
 }
 
 .card-item {
-  width: 12%;
+  width: 25%;
   font-weight: 500;
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {
@@ -300,5 +305,7 @@ h1 {
   line-height: 21.86px;
   letter-spacing: 0em;
   cursor: pointer;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 </style>

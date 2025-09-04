@@ -478,6 +478,9 @@ h2 {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(140, 147, 166, 1);
+  word-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
 }
 .miners {
   width: 100%;

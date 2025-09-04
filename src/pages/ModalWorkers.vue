@@ -1,7 +1,7 @@
 <template>
   <div class="overlay">
     <div class="modal">
-      <h1>Создать сотрудника</h1>
+      <h1>Создать воркер</h1>
       <div class="wrap-group">
         <div class="group">
           <label for="name" class="group-value">Имя</label>
@@ -105,8 +105,8 @@ export default {
     update() {
       this.$emit("update", {
         name: this.name,
-        donor: this.donor,
-        hashrate: this.hashrate,
+        donor_miner_id: this.donor,
+        hash_rate: this.hashrate,
         hash_type: this.hash_type,
         miner_item_id: this.miner_item_id,
         userid: this.userid,

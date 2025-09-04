@@ -1,25 +1,25 @@
 <script>
-import axios from 'axios'
+import axios from "axios";
 export default {
   name: "NonPayments",
   data() {
     return {
-      search: '', 
+      search: "",
       cards: [],
     };
   },
-  
+
   methods: {
     async fetchUsers() {
       const url = "/non_payments";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
-        console.log(response.data)
-        this.cards = response.data; 
+        console.log(response.data);
+        this.cards = response.data;
 
         // После получения карточек, запрашиваем номера телефонов
         await this.fetchPhonesForUsers();
@@ -30,7 +30,7 @@ export default {
 
     async fetchPhonesForUsers() {
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       for (const card of this.cards) {
@@ -39,7 +39,7 @@ export default {
           card.phone = response.data.phone; // Предполагается, что API возвращает объект с полем phone
         } catch (error) {
           console.error(`Error fetching phone for user ID ${card.user_id}:`, error);
-          card.phone = 'Неизвестно'; // Устанавливаем значение по умолчанию в случае ошибки
+          card.phone = "Неизвестно"; // Устанавливаем значение по умолчанию в случае ошибки
         }
       }
     },
@@ -50,8 +50,6 @@ export default {
   },
 };
 </script>
-
-
 
 <template>
   <div class="wrapper">
@@ -79,11 +77,7 @@ export default {
         <span class="card-item">{{ card.phone }}</span>
         <span class="card-item">{{ card.created }}</span>
         <div class="card-item more">
-          <img
-            @click="card.more = !card.more"
-            src="../assets/more.svg"
-            alt=""
-          />
+          <img @click="card.more = !card.more" src="../assets/more.svg" alt="" />
         </div>
         <div class="options" v-if="card.more">
           <button>Посмотреть</button>
@@ -173,6 +167,9 @@ h1 {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(140, 147, 166, 1);
+  word-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
 }
 .cards {
   width: 100%;
@@ -193,11 +190,13 @@ h1 {
 }
 
 .card-item {
-  width: 12%;
+  width: 25%;
   font-weight: 500;
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {
@@ -263,5 +262,7 @@ h1 {
   line-height: 21.86px;
   letter-spacing: 0em;
   cursor: pointer;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 </style>

@@ -1,25 +1,25 @@
 <script>
-import LoadingSpinner from './LoadingSpinner.vue';
-import axios from 'axios'
+import LoadingSpinner from "./LoadingSpinner.vue";
+import axios from "axios";
 export default {
   name: "AppMain",
-  components: {LoadingSpinner},
+  components: { LoadingSpinner },
   data() {
     return {
-      total_hashrate: '',
-      electricity_cost: '',
-      online_workers: '',
-      offline_workers: '',
-      kw:'',
+      total_hashrate: "",
+      electricity_cost: "",
+      online_workers: "",
+      offline_workers: "",
+      kw: "",
       statActive: 4,
-      income_host: '',
-      total_sell: '',
-      new_ticket: '',
-      req_ticket: '',
-      dohod_client: '',
-      rashod_client: '',
-      profit_client: '',
-      isloading:false,
+      income_host: "",
+      total_sell: "",
+      new_ticket: "",
+      req_ticket: "",
+      dohod_client: "",
+      rashod_client: "",
+      profit_client: "",
+      isloading: false,
     };
   },
   methods: {
@@ -33,13 +33,13 @@ export default {
     async fetchUsers(type) {
       this.isloading = true;
       let url;
-      if(type == 'main'){
-         url = `/main`;
-      }else{
+      if (type == "main") {
+        url = `/main`;
+      } else {
         url = `/main/${type}`;
       }
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
@@ -48,30 +48,29 @@ export default {
         this.electricity_cost = response.data.electricity_cost;
         this.kw = response.data.kw;
         this.income_host = response.data.hosting_profit;
-        this.offline_workers = response.data.offline_workers ;
-        this.online_workers = response.data.online_workers ;
-        this.total_hashrate = response.data.total_hashrate 
-        this.req_ticket = response.data.feedbacks ;
-        this.new_ticket = response.data.tickets ;
-        this.total_sell = response.data.sales_total ;
-        this.dohod_client = response.data.client_income ;
+        this.offline_workers = response.data.offline_workers;
+        this.online_workers = response.data.online_workers;
+        this.total_hashrate = response.data.total_hashrate;
+        this.req_ticket = response.data.feedbacks;
+        this.new_ticket = response.data.tickets;
+        this.total_sell = response.data.sales_total;
+        this.dohod_client = response.data.client_income;
         this.rashod_client = response.data.client_expense;
         this.profit_client = response.data.client_profit;
-        
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
+      } finally {
         this.isloading = false;
       }
     },
   },
   mounted() {
-    this.fetchUsers('main');
+    this.fetchUsers("main");
   },
 };
 </script>
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <main class="wrapper" v-else>
     <div class="cards">
       <div class="card total-card">
@@ -129,7 +128,7 @@ export default {
     <div class="cards">
       <div class="card stat">
         <span class="card-title">KW</span>
-        <span class="card-value">{{kw}}</span>
+        <span class="card-value">{{ kw }}</span>
       </div>
       <div class="card stat">
         <span class="card-title">Стоимость электроэнергии</span>
@@ -191,6 +190,12 @@ export default {
   </main>
 </template>
 <style scoped>
+@media (max-width: 450px) {
+  .group-title {
+    display: flex;
+    flex-direction: column;
+  }
+}
 .wrapper {
   width: 100%;
   display: flex;

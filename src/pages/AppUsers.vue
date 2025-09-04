@@ -1,27 +1,27 @@
 <script>
-import axios from 'axios';
-import LoadingSpinner from './LoadingSpinner.vue'; 
+import axios from "axios";
+import LoadingSpinner from "./LoadingSpinner.vue";
 
 export default {
   name: "AppCompanies",
   data() {
     return {
       cards: [],
-      search: '',
-      isloading:false,
+      search: "",
+      isloading: false,
     };
   },
-  componetnts:{LoadingSpinner},
+  componetnts: { LoadingSpinner },
   computed: {
     filteredCards() {
-      return this.cards.filter(card => {
+      return this.cards.filter((card) => {
         const fullName = `${card.firstname} ${card.lastname}`.toLowerCase();
         return fullName.includes(this.search.toLowerCase());
       });
     },
   },
   methods: {
-    open(cardId,active) {
+    open(cardId, active) {
       try {
         this.$router.push({ name: "user", query: { active }, params: { id: cardId } });
       } catch (err) {
@@ -32,39 +32,39 @@ export default {
       this.isloading = true;
       const url = "/users/create";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
       const data = {
-    firstname: "Имя",           // Замените на реальное имя
-    lastname: "Фамилия",        // Замените на реальную фамилию
-    phone: "+1234567890",       // Замените на реальный номер телефона
-    email: "user@example.com",   // Замените на реальный email
-    password: "securepassword",  // Замените на реальный пароль
-    image_id: null,             // Укажите id изображения или null
-    telegram: "@username",       // Замените на реальный Telegram
-    country: "Страна",           // Замените на реальную страну
-    address: "Адрес",            // Замените на реальный адрес
-    inn: "1234567890",           // Замените на реальный ИНН
-    profile_type: "Тип профиля", // Замените на реальный тип профиля
-    last_totp: null,            // Укажите последнее значение TOTP или null
-    totp_sent: null,            // Укажите дату и время отправки TOTP или null
-    wallet: "Кошелек",          // Замените на реальный кошелек
-    mfa_key: null,              // Укажите ключ MFA или null
-    mfa_enabled: false,         // Укажите, включен ли MFA
-    miner_name: "Имя майнера",   // Замените на реальное имя майнера
-    miner_id: "ID майнера",      // Замените на реальный ID майнера
-    wallet_id: "ID кошелька",    // Замените на реальный ID кошелька
-    access_allowed: true,       // Укажите, разрешен ли доступ
-    lang: "ru",                 // Укажите язык (например, "ru" для русского)
-    created: new Date().toISOString(), // Дата создания в формате ISO
-    testmode: false              // Укажите, включен ли тестовый режим
-};
+        firstname: "Имя", // Замените на реальное имя
+        lastname: "Фамилия", // Замените на реальную фамилию
+        phone: "+1234567890", // Замените на реальный номер телефона
+        email: "user@example.com", // Замените на реальный email
+        password: "securepassword", // Замените на реальный пароль
+        image_id: null, // Укажите id изображения или null
+        telegram: "@username", // Замените на реальный Telegram
+        country: "Страна", // Замените на реальную страну
+        address: "Адрес", // Замените на реальный адрес
+        inn: "1234567890", // Замените на реальный ИНН
+        profile_type: "Тип профиля", // Замените на реальный тип профиля
+        last_totp: null, // Укажите последнее значение TOTP или null
+        totp_sent: null, // Укажите дату и время отправки TOTP или null
+        wallet: "Кошелек", // Замените на реальный кошелек
+        mfa_key: null, // Укажите ключ MFA или null
+        mfa_enabled: false, // Укажите, включен ли MFA
+        miner_name: "Имя майнера", // Замените на реальное имя майнера
+        miner_id: "ID майнера", // Замените на реальный ID майнера
+        wallet_id: "ID кошелька", // Замените на реальный ID кошелька
+        access_allowed: true, // Укажите, разрешен ли доступ
+        lang: "ru", // Укажите язык (например, "ru" для русского)
+        created: new Date().toISOString(), // Дата создания в формате ISO
+        testmode: false, // Укажите, включен ли тестовый режим
+      };
       try {
         const response = await axios.post(url, data, { headers });
-        console.log(response.data)
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
+      } finally {
         this.isloading = false;
         await this.fetchUsers();
       }
@@ -73,27 +73,27 @@ export default {
       this.isloading = true;
       const url = "/users";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
-        this.cards = response.data; 
+        this.cards = response.data;
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
+      } finally {
         this.isloading = false;
       }
     },
   },
   mounted() {
-    this.fetchUsers(); 
+    this.fetchUsers();
   },
 };
 </script>
 
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <div class="wrapper" v-else>
     <div class="group-title">
       <h1>Пользователи</h1>
@@ -112,21 +112,22 @@ export default {
       <span class="options-field"></span>
     </div>
     <div class="cards">
-      <div class="card" v-for="card in filteredCards" :key="card.id" @click="open(card.id)">
+      <div
+        class="card"
+        v-for="card in filteredCards"
+        :key="card.id"
+        @click="open(card.id)"
+      >
         <span class="card-item">{{ card.id }}</span>
         <span class="card-item">{{ card.firstname }} {{ card.lastname }}</span>
         <span class="card-item">{{ card.email }}</span>
         <span class="card-item">{{ card.phone }}</span>
         <div class="card-item more">
-          <img
-            @click.stop="card.more = !card.more"
-            src="../assets/more.svg"
-            alt=""
-          />
+          <img @click.stop="card.more = !card.more" src="../assets/more.svg" alt="" />
         </div>
         <div class="options" v-if="card.more">
-          <button @click.stop="open">Посмотреть</button>
-          <button @click.stop="open(event, 2)">Воркеры</button>
+          <button @click.stop="open(card.id)">Посмотреть</button>
+          <button @click.stop="open(card.id, 2)">Воркеры</button>
         </div>
       </div>
     </div>
@@ -230,6 +231,8 @@ export default {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {

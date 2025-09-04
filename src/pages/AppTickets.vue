@@ -1,26 +1,26 @@
 <script>
-import axios from 'axios'
-import LoadingSpinner from './LoadingSpinner.vue';
+import axios from "axios";
+import LoadingSpinner from "./LoadingSpinner.vue";
 export default {
   name: "AppTickets",
   data() {
     return {
-      search: '',
+      search: "",
       cards: [],
-      isloading:false,
+      isloading: false,
     };
   },
-  components:{LoadingSpinner},
+  components: { LoadingSpinner },
   methods: {
     open(data) {
       try {
-        localStorage.setItem('firstname', data.user.firstname);
-        localStorage.setItem('lastname', data.user.lastname);
-        localStorage.setItem('date', data.created);
-        localStorage.setItem('title', data.title);
-        localStorage.setItem('is_open', data.is_open);
-        localStorage.setItem('ticket_id', data.id);
-        localStorage.setItem('id', data.user.id);
+        localStorage.setItem("firstname", data.user.firstname);
+        localStorage.setItem("lastname", data.user.lastname);
+        localStorage.setItem("date", data.created);
+        localStorage.setItem("title", data.title);
+        localStorage.setItem("is_open", data.is_open);
+        localStorage.setItem("ticket_id", data.id);
+        localStorage.setItem("id", data.user.id);
         this.$router.push({ name: "ticket" });
       } catch (err) {
         console.log(err);
@@ -28,31 +28,32 @@ export default {
     },
     async fetchUsers() {
       this.isloading = true;
-      const url = "/tickets"; 
+      const url = "/tickets";
       const headers = {
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
       try {
         const response = await axios.get(url, { headers });
-        this.cards = response.data; 
-       
+        this.cards = response.data;
+
         for (let i = 0; i < this.cards.length; i++) {
-          this.cards[i].is_open = this.cards[i].is_open ? 'Открыт' : 'Закрыт';
+          this.cards[i].is_open = this.cards[i].is_open ? "Открыт" : "Закрыт";
         }
       } catch (error) {
         console.error("Error fetching users:", error);
-      }finally{
-      this.isloading = false;
+      } finally {
+        this.isloading = false;
       }
     },
   },
   computed: {
     filteredCards() {
-
-      return this.cards.filter(card => {
+      return this.cards.filter((card) => {
         return (
-          `${card.firstname} ${card.lastname}`.toLowerCase().includes(this.search.toLowerCase()) ||
+          `${card.firstname} ${card.lastname}`
+            .toLowerCase()
+            .includes(this.search.toLowerCase()) ||
           card.title.toLowerCase().includes(this.search.toLowerCase())
         );
       });
@@ -60,12 +61,12 @@ export default {
   },
   mounted() {
     this.fetchUsers();
-  }
+  },
 };
 </script>
 
 <template>
-  <LoadingSpinner v-if="isloading"/>
+  <LoadingSpinner v-if="isloading" />
   <div class="wrapper" v-else>
     <div class="actions">
       <img src="../assets/search-support.svg" alt="" class="search-img" />
@@ -98,11 +99,7 @@ export default {
         </span>
         <span class="card-item">{{ card.created }}</span>
         <div class="card-item more">
-          <img
-            @click="card.more = !card.more"
-            src="../assets/more.svg"
-            alt=""
-          />
+          <img @click="card.more = !card.more" src="../assets/more.svg" alt="" />
         </div>
         <div class="options" v-if="card.more">
           <button>Посмотреть</button>
@@ -184,6 +181,9 @@ export default {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(140, 147, 166, 1);
+  word-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
 }
 .cards {
   width: 100%;
@@ -209,6 +209,8 @@ export default {
   font-size: 14px;
   line-height: 19.12px;
   color: rgba(20, 23, 31, 1);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .more {

@@ -576,7 +576,11 @@ export default {
   flex-direction: column;
   gap: 20px;
 }
-
+@media (max-width: 450px) {
+  .wrap-group {
+    flex-direction: column !important;
+  }
+}
 h2 {
   font-size: 20px;
   font-weight: 600;

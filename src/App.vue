@@ -223,4 +223,21 @@ button::-moz-focus-inner {
     display: flex;
   }
 }
+@media (max-width: 450px) {
+  .group {
+    flex-direction: column !important;
+  }
+  .wrap-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-direction: column !important;
+  }
+  .modal {
+    width: 90% !important;
+  }
+  .wrap-group {
+    flex-direction: column !important;
+  }
+}
 </style>
