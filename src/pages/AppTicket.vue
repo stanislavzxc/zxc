@@ -1,253 +1,3 @@
-<script>
-import axios from "axios";
-export default {
-  name: "AppTicket",
-  data() {
-    return {
-      ticket_id: "Загрузка...",
-      status: "Загрузка...",
-      theme: "Загрузка...",
-      client: "Загрузка...",
-      client2: "",
-      createdAt: "Загрузка...",
-      messages: [],
-      newMessage: "", // Новое текстовое сообщение
-      selectedFile: null, // Выбранный файл
-      userid: null,
-      isLoading: false,
-    };
-  },
-  methods: {
-    async closeTicket() {
-      try {
-        this.isLoading = true;
-        let response = await axios.put(
-          `https://totalminers.io/api/tickets/close`,
-          {
-            id: this.ticket_id,
-            userId: this.userid,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        console.log(response);
-      } catch (err) {
-        console.log(err);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
-    async openTicket() {
-      try {
-        this.isLoading = true;
-        let response = await axios.get(`https://totalminers.io/api/tickets/close`, {
-          params: {
-            id: this.ticket_id,
-            userId: this.userid,
-          },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        console.log(response);
-      } catch (err) {
-        console.log(err);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
-    zxc() {
-      if (this.status === "Открыт") {
-        this.openTicket();
-      } else {
-        this.closeTicket();
-      }
-    },
-
-    update_data() {
-      this.ticket_id = localStorage.getItem("ticket_id");
-      this.status = localStorage.getItem("is_open");
-      this.theme = localStorage.getItem("title");
-      this.client = localStorage.getItem("firstname");
-      this.client2 = localStorage.getItem("lastname");
-      this.createdAt = localStorage.getItem("date");
-      this.userid = localStorage.getItem("id");
-    },
-
-    handleFileChange(event) {
-      this.selectedFile = event.target.files[0];
-      if (this.selectedFile) {
-        this.sendFile(); // Отправляем файл сразу после выбора
-      }
-    },
-
-    async sendFile() {
-      if (!this.selectedFile) {
-        alert("Выберите файл для отправки!");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", this.selectedFile);
-
-      try {
-        const response = await axios.post(`/tickets/${this.ticket_id}`, formData, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        });
-
-        console.log("Файл успешно отправлен:", response.data.message);
-
-        // Добавляем файл в массив сообщений
-        this.messages.push({
-          id: Date.now(),
-          sender: "admin",
-          content: "", // Пустое текстовое сообщение, так как отправлен файл
-          type: "file",
-          name: this.selectedFile.name,
-          size: this.selectedFile.size,
-          url: URL.createObjectURL(this.selectedFile), // Создаем URL для отображения файла
-        });
-
-        // Очищаем выбранный файл
-        this.selectedFile = null;
-        this.$refs.fileInput.value = ""; // Сбрасываем выбранный файл
-      } catch (error) {
-        if (error.response) {
-          console.error("Ошибка:", error.response.data.error);
-        } else {
-          console.error("Ошибка при отправке файла:", error);
-        }
-      }
-    },
-
-    async sendMessage() {
-      if (!this.newMessage.trim()) {
-        alert("Введите сообщение!");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("msg", this.newMessage);
-
-      try {
-        const response = await axios.post(`/tickets/${this.ticket_id}`, formData, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        });
-
-        console.log("Сообщение успешно отправлено:", response.data.message);
-
-        // Добавляем текстовое сообщение в массив сообщений
-        this.messages.push({
-          id: Date.now(),
-          sender: "admin",
-          content: this.newMessage,
-          type: "text",
-          name: "",
-          size: "",
-        });
-
-        this.newMessage = "";
-      } catch (error) {
-        if (error.response) {
-          console.error("Ошибка:", error.response.data.error);
-        } else {
-          console.error("Ошибка при отправке сообщения:", error);
-        }
-      }
-    },
-
-    async load_messages() {
-      try {
-        // Обновим данные из localStorage, чтобы ticket_id и userid были актуальны
-        this.update_data();
-
-        let response = await axios.put(
-          `https://totalminers.io/api/tickets/messages/get/all`,
-          {
-            ticket_id: this.ticket_id,
-            user_id: this.userid,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        console.log(response);
-
-        // Обработка сообщений
-        this.messages = response.data.messages
-          .map((msg) => {
-            let url = null;
-            let name = null;
-
-            // Проверяем, что msg.content не null
-            const content = msg.content || ""; // Если null, используем пустую строку
-
-            if (content.startsWith("[file:")) {
-              // Парсим имя файла и base64
-              const match = content.match(/^\[file:(.+?)\](.+)$/);
-              if (match) {
-                name = match[1];
-                url = match[2];
-              }
-              return {
-                id: msg.id,
-                sender: msg.sender,
-                content: "", // Пустое текстовое сообщение, так как это файл
-                type: "file",
-                name,
-                size: "", // Можно добавить размер, если он доступен
-                url,
-              };
-            } else {
-              // Если это текстовое сообщение
-              return {
-                id: msg.id,
-                sender: msg.sender,
-                content: content, // Сохраняем текст сообщения
-                type: "text",
-                name: "",
-                size: "",
-              };
-            }
-          })
-          .reverse();
-      } catch (err) {
-        console.log(err);
-      }
-    },
-
-    downloadFile(url, fileName) {
-      const link = document.createElement("a");
-      link.href = url; // Используем URL из сообщения
-      link.download = fileName; // Имя файла для скачивания
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    },
-  },
-
-  mounted() {
-    setTimeout(() => {
-      this.update_data();
-      this.load_messages();
-    }, 1000);
-  },
-};
-</script>
-
 <template>
   <section class="wrapper">
     <h1>Тикет №{{ ticket_id }}</h1>
@@ -289,56 +39,56 @@ export default {
           class="wrap-message"
           v-for="message in messages"
           :key="message.id"
-          :class="{ user: message.sender == 'user' }"
+          :class="{
+            user: message.sender === 'user',
+            admin: message.sender === 'admin',
+          }"
         >
           <div
             class="group-message"
-            :class="{ userGroupMessage: message.sender == 'user' }"
+            :class="{
+              userGroupMessage: message.sender === 'user',
+              adminGroupMessage: message.sender === 'admin',
+            }"
           >
+            <div class="avatar" v-if="message.sender === 'admin'">
+              <img src="../assets/image.png" alt="Admin avatar" />
+            </div>
+
             <div
               class="message"
-              v-if="message.type == 'text'"
-              :class="{ userMessage: message.sender == 'user' }"
+              :class="{
+                userMessage: message.sender === 'user',
+                adminMessage: message.sender === 'admin',
+              }"
             >
-              {{ message.content }}
-            </div>
-            <div
-              class="message doc"
-              v-if="message.type == 'file'"
-              :key="message.id"
-              :class="{ userMessage: message.sender == 'user' }"
-              @click="
-                downloadFile(
-                  'data:application/octet-stream;base64,' + message.url,
-                  message.name
-                )
-              "
-            >
-              <template
-                v-if="
-                  message.name.endsWith('.jpg') ||
-                  message.name.endsWith('.jpeg') ||
-                  message.name.endsWith('.png') ||
-                  message.name.endsWith('.gif')
-                "
-              >
-                <img
-                  :src="message.url"
-                  alt="Uploaded Image"
-                  style="max-width: 100%; height: auto"
-                />
+              <template v-if="message.type === 'text'">
+                {{ message.content }}
               </template>
-              <template v-else>
-                <img src="../assets/message-file.svg" alt="File Icon" />
-                <div class="info">
-                  <span class="name">{{ message.name }}</span>
-                  <span class="size">{{ message.size }} bytes</span>
-                </div>
+
+              <template v-else-if="message.type === 'file'">
+                <template v-if="message.url && message.url.startsWith('data:image/')">
+                  <img
+                    :src="message.url"
+                    alt="Uploaded Image"
+                    style="max-width: 100%; height: auto"
+                    @click="downloadFile(message.url, message.name)"
+                  />
+                </template>
+                <template v-else>
+                  <div class="doc" @click="downloadFile(message.url, message.name)">
+                    <img src="../assets/message-file.svg" alt="File Icon" />
+                    <div class="info">
+                      <span class="name">{{ message.name }}</span>
+                      <span class="size">{{ message.size }} bytes</span>
+                    </div>
+                  </div>
+                </template>
               </template>
             </div>
 
-            <div class="avatar">
-              <img src="../assets/image.png" alt="" v-if="message.sender == 'user'" />
+            <div class="avatar" v-if="message.sender === 'user'">
+              <img src="../assets/image.png" />
             </div>
           </div>
         </div>
@@ -355,6 +105,7 @@ export default {
           class="group-item-chat"
           placeholder="начните писать"
           v-model="newMessage"
+          @keyup.enter="sendMessage"
         />
         <img class="send" src="../assets/send.svg" alt="" @click="sendMessage" />
       </div>
@@ -362,13 +113,264 @@ export default {
   </section>
 </template>
 
+<script>
+import axios from "axios";
+
+export default {
+  name: "AppTicket",
+  data() {
+    return {
+      ticket_id: "Загрузка...",
+      status: "Загрузка...",
+      theme: "Загрузка...",
+      client: "Загрузка...",
+      client2: "",
+      createdAt: "Загрузка...",
+      messages: [],
+      newMessage: "",
+      selectedFile: null,
+      userid: null,
+      isLoading: false,
+    };
+  },
+  methods: {
+    async closeTicket() {
+      try {
+        this.isLoading = true;
+        const response = await axios.put(
+          `https://totalminers.io/api/tickets/close`,
+          {
+            id: this.ticket_id,
+            userId: this.userid,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        console.log(response);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async openTicket() {
+      try {
+        this.isLoading = true;
+        const response = await axios.get(`https://totalminers.io/api/tickets/close`, {
+          params: {
+            id: this.ticket_id,
+            userId: this.userid,
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        console.log(response);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    zxc() {
+      if (this.status === "Открыт") {
+        this.openTicket();
+      } else if (this.status === "Закрыт") {
+        this.closeTicket();
+      }
+    },
+
+    update_data() {
+      this.ticket_id = localStorage.getItem("ticket_id") || this.ticket_id;
+      this.status = localStorage.getItem("is_open") || this.status;
+      this.theme = localStorage.getItem("title") || this.theme;
+      this.client = localStorage.getItem("firstname") || this.client;
+      this.client2 = localStorage.getItem("lastname") || this.client2;
+      this.createdAt = localStorage.getItem("date") || this.createdAt;
+      this.userid = localStorage.getItem("id") || this.userid;
+    },
+
+    readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    },
+
+    async handleFileChange(event) {
+      this.selectedFile = event.target.files[0];
+      if (this.selectedFile) {
+        await this.sendFile();
+      }
+    },
+
+    async sendFile() {
+      if (!this.selectedFile) {
+        alert("Выберите файл для отправки!");
+        return;
+      }
+
+      try {
+        const base64 = await this.readFileAsBase64(this.selectedFile);
+        const formData = new FormData();
+        formData.append("msg", `[file:${this.selectedFile.name}]${base64}`);
+
+        const response = await axios.post(`/tickets/${this.ticket_id}`, formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        console.log("Файл успешно отправлен:", response.data.message);
+
+        // Добавляем файл локально для мгновенного отображения
+        this.messages.push({
+          id: Date.now(),
+          sender: "admin",
+          content: "",
+          type: "file",
+          name: this.selectedFile.name,
+          size: this.selectedFile.size,
+          url: base64, // Полный data: URL для отображения и скачивания
+        });
+
+        this.selectedFile = null;
+        if (this.$refs.fileInput) this.$refs.fileInput.value = "";
+      } catch (error) {
+        if (error.response) {
+          console.error("Ошибка:", error.response.data.error);
+        } else {
+          console.error("Ошибка при отправке файла:", error);
+        }
+      }
+    },
+
+    async sendMessage() {
+      if (!this.newMessage.trim()) {
+        alert("Введите сообщение!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("msg", this.newMessage.trim());
+
+      try {
+        const response = await axios.post(`/tickets/${this.ticket_id}`, formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        console.log("Сообщение успешно отправлено:", response.data.message);
+
+        // Добавляем сообщение локально
+        this.messages.push({
+          id: Date.now(),
+          sender: "admin",
+          content: this.newMessage.trim(),
+          type: "text",
+          name: "",
+          size: "",
+        });
+
+        this.newMessage = "";
+      } catch (error) {
+        if (error.response) {
+          console.error("Ошибка:", error.response.data.error);
+        } else {
+          console.error("Ошибка при отправке сообщения:", error);
+        }
+      }
+    },
+
+    async load_messages() {
+      try {
+        this.update_data();
+
+        const response = await axios.put(
+          `https://totalminers.io/api/tickets/messages/get/all`,
+          {
+            ticket_id: this.ticket_id,
+            user_id: this.userid,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        console.log(response);
+
+        this.messages = (response.data.messages || [])
+          .map((msg) => {
+            const content = msg.content || "";
+            if (content.startsWith("[file:")) {
+              const match = content.match(/^\[file:(.+?)\](.+)$/);
+              if (match) {
+                return {
+                  id: msg.id,
+                  sender: msg.sender,
+                  content: "",
+                  type: "file",
+                  name: match[1],
+                  size: "",
+                  url: match[2], // Теперь это полный data: URL
+                };
+              }
+            }
+            return {
+              id: msg.id,
+              sender: msg.sender,
+              content,
+              type: "text",
+              name: "",
+              size: "",
+            };
+          })
+          .reverse();
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    downloadFile(url, fileName) {
+      const link = document.createElement("a");
+      link.href = url; // Прямой data: URL или замененный, если внешний
+      link.download = fileName || "";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+  },
+
+  mounted() {
+    setTimeout(() => {
+      this.update_data();
+      this.load_messages();
+    }, 1000);
+  },
+};
+</script>
+
 <style scoped>
+/* Стили из вашего оригинального кода с добавлениями из примера для сообщений */
+
 .wrapper {
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
+
 .card {
   background-color: #fff;
   display: flex;
@@ -385,43 +387,6 @@ export default {
 .btn-action:hover,
 .chat:hover {
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
-}
-
-.wrap-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.group-title {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-h1 span {
-  font-weight: 600;
-  font-size: 24px;
-  line-height: 32.78px;
-}
-
-h2 {
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 27.32px;
-  color: #14171f;
-}
-
-.btn {
-  padding: 14.5px 24px;
-  border-radius: 8px;
-  color: #5b6171;
-  font-weight: 600;
-  transition: all 500ms ease;
-}
-.edit {
-  color: #195ee6;
 }
 
 .group {
@@ -485,14 +450,6 @@ h2 {
   align-items: center;
   gap: 10px;
 }
-@media (max-width: 450px) {
-  .field {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-direction: column;
-  }
-}
 
 .field-item {
   font-weight: 500;
@@ -506,6 +463,19 @@ h2 {
   font-size: 16px;
   line-height: 21.86px;
   letter-spacing: 0em;
+}
+
+h1 {
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32.78px;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 27.32px;
+  color: #14171f;
 }
 
 /* chat */
@@ -558,6 +528,10 @@ input[type="file"] {
   justify-content: flex-end;
 }
 
+.admin {
+  justify-content: flex-start;
+}
+
 .group-message {
   width: 100%;
   display: flex;
@@ -576,6 +550,13 @@ input[type="file"] {
   justify-content: end;
 }
 
+.adminGroupMessage {
+  flex-direction: row;
+  padding-left: 0;
+  padding-right: 38px;
+  justify-content: flex-start;
+}
+
 .message {
   max-width: 600px;
   width: fit-content;
@@ -584,15 +565,15 @@ input[type="file"] {
   border-radius: 4px 12px 12px 12px;
   border: 1px solid #f1f2f4;
 }
+
 .userMessage {
   background-color: #fff;
   border-radius: 12px 4px 12px 12px;
 }
 
-.group-item {
-  line-height: 22px;
-  font-size: 14px;
-  width: 100%;
+.adminMessage {
+  background-color: #e6eefe;
+  border-radius: 12px 12px 12px 4px;
 }
 
 .group-send {
@@ -610,21 +591,21 @@ input[type="file"] {
   cursor: pointer;
   transition: all 500ms ease;
   width: 30px;
-  width: 30px;
 }
 
 .send:hover {
   transform: translateY(-3px);
 }
+
 .avatar {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  overflow: hidden; /* Обрезает изображение, если оно выходит за пределы блока */
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f0f0; /* Фон на случай, если изображение не загрузится */
+  background-color: #f0f0f0;
   box-sizing: border-box;
 }
 
@@ -633,9 +614,9 @@ input[type="file"] {
   height: 100%;
   object-fit: cover;
   border-radius: 8px;
-  display: block; /* Убирает лишние пробелы */
-  border: none; /* Убирает возможные границы */
-  padding: 0; /* Убирает возможные отступы */
+  display: block;
+  border: none;
+  padding: 0;
   margin: 0;
 }
 

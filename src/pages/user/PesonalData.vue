@@ -27,137 +27,13 @@ export default {
       wallet: "Загрузка...",
       lang: "Загрузка...",
       check: "Загрузка...",
-      test: "Загрузка...",
+      test: false,
       date: "",
       miners: [],
       miner_id: [],
-      shops: [
-        {
-          id: "2326",
-          date: "15.06.2024",
-          id_payment: "65554",
-          price: "8880",
-          miners: [
-            {
-              id: "1",
-              name: "ANTMINER S19K PRO 120TH",
-              count: 1,
-              price: "4 880",
-            },
-            {
-              id: "2",
-              name: "ANTMINER S19K PRO 120TH",
-              count: 1,
-              price: "4 000",
-            },
-          ],
-        },
-        {
-          id: "2326",
-          date: "15.06.2024",
-          id_payment: "65554",
-          price: "8880",
-          miners: [
-            {
-              id: "1",
-              name: "ANTMINER S19K PRO 120TH",
-              count: 1,
-              price: "4 880",
-            },
-            {
-              id: "2",
-              name: "ANTMINER S19K PRO 120TH",
-              count: 1,
-              price: "4 000",
-            },
-          ],
-        },
-        {
-          id: "2326",
-          date: "15.06.2024",
-          id_payment: "65554",
-          price: "8880",
-          miners: [
-            {
-              id: "1",
-              name: "ANTMINER S19K PRO 120TH",
-              count: 1,
-              price: "4 880",
-            },
-            {
-              id: "2",
-              name: "ANTMINER S19K PRO 120TH",
-              count: 1,
-              price: "4 000",
-            },
-          ],
-        },
-      ],
-      paymentsHost: [
-        {
-          id: "1",
-          date: "15.06.2024",
-          done: true,
-          type: "Payment",
-          price: "8880",
-        },
-        {
-          id: "2",
-          date: "15.06.2024",
-          done: true,
-          type: "Payment",
-          price: "8880",
-        },
-        {
-          id: "3",
-          date: "15.06.2024",
-          done: true,
-          type: "Payment",
-          price: "8880",
-        },
-      ],
-      payoutsHost: [
-        {
-          id: "1",
-          date: "15.06.2024",
-          done: true,
-          type: "Payment",
-          price: "480",
-          hash: "131165156",
-        },
-        {
-          id: "2",
-          date: "15.06.2024",
-          done: true,
-          type: "Payment",
-          price: "480",
-          hash: "131165156",
-        },
-        {
-          id: "3",
-          date: "15.06.2024",
-          done: true,
-          type: "Payment",
-          price: "480",
-          hash: "131165156",
-        },
-        {
-          id: "4",
-          date: "15.06.2024",
-          done: true,
-          type: "Payment",
-          price: "480",
-          hash: "131165156",
-        },
-        {
-          id: "5",
-          date: "15.06.2024",
-          done: true,
-          type: "Payment",
-          price: "480",
-          hash: "131165156",
-        },
-      ],
+      shops: [],
+      paymentsHost: [],
+      payoutsHost: [],
       discounts: [],
       price_energy: "",
       percent_sell: "",
@@ -167,6 +43,8 @@ export default {
       buy_request: [],
       mails: [],
       template_id: "",
+      client_balance: 0,
+      status_mining: null,
     };
   },
   components: { LoadingSpinner },
@@ -209,9 +87,9 @@ export default {
       this.id_miner = user.miner_id || "Нет данных";
       this.wallet = user.wallet || "Нет данных";
       this.lang = user.lang || "Нет данных";
-      this.test = user.testmode || "Нет данных";
+      this.test = user.testmode;
       this.check = (user.access_allowed === true ? "есть" : "нет") || "Нет данных";
-      // alert(this.profiletype)
+      this.status_mining = user.mining_state;
     },
     async getMiners() {
       const url = `/miners`;
@@ -257,12 +135,15 @@ export default {
       }
     },
     async discount_new() {
+      this.isloading = true;
       const url = `discounts/new`;
       const headers = {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "application/json",
       };
-      this.date = this.date.concat("T00:00");
+      if (this.date && !this.date.includes("T")) {
+        this.date = this.date.concat("T00:00");
+      }
 
       const data = {
         user_id: this.id,
@@ -281,10 +162,14 @@ export default {
         console.log(data);
       } catch (error) {
         console.error("Error updating user:", error);
+      } finally {
+        await this.discount_getall();
+        this.isloading = false;
       }
     },
-    async discount_delete() {
-      const url = `discounts/9/delete`;
+    async discount_delete(id) {
+      this.isloading = true;
+      const url = `discounts/${id}/delete`;
       const headers = {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
@@ -294,6 +179,9 @@ export default {
         console.log(response.data);
       } catch (error) {
         console.error("Error updating user:", error);
+      } finally {
+        await this.discount_getall();
+        this.isloading = false;
       }
     },
     async discount_getall() {
@@ -320,12 +208,32 @@ export default {
       }
     },
     async discount_update(id) {
+      this.isloading = true;
+      const url = `discounts/update`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+      if (this.date && !this.date.includes("T")) {
+        this.date = this.date.concat("T00:00");
+      }
+
+      const data = {
+        user_id: this.id,
+        miner_id: this.id_miner,
+        electricity_cost: parseInt(this.qwe),
+        applies_to_electricity: true,
+        discount_percentage: parseFloat(this.zxc),
+        is_active: true,
+        expiration_date: this.date,
+        discount_id: id,
+      };
       try {
-        this.isloading = true;
-        await this.discount_delete(id);
-        await this.discount_new();
-      } catch (e) {
-        console.log(e);
+        const response = await axios.post(url, data, { headers });
+        console.log(response);
+        console.log(data);
+      } catch (error) {
+        console.error("Error updating user:", error);
       } finally {
         this.isloading = false;
       }
@@ -372,6 +280,54 @@ export default {
 
       try {
         const response = await axios.get(url, { headers });
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error updating user:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+    async update_password() {
+      if (this.newPass != this.newPass2) {
+        alert("Пароли не совпадают!");
+        return;
+      }
+
+      this.isloading = true;
+      const url = `users/${this.id}/update/password`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+      const data = {
+        password: this.newPass,
+      };
+
+      try {
+        const response = await axios.post(url, data, { headers });
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error updating user:", error);
+      } finally {
+        this.isloading = false;
+      }
+    },
+    async update_mining_state() {
+      this.isloading = true;
+      const url = `users/${this.id}/update/mining_state`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+
+      const miningStateBool = this.status_mining === "true";
+
+      const data = {
+        mining_state: miningStateBool,
+      };
+      console.log(data);
+      try {
+        const response = await axios.post(url, data, { headers });
         console.log(response.data);
       } catch (error) {
         console.error("Error updating user:", error);
@@ -473,6 +429,45 @@ export default {
         this.isloading = false;
       }
     },
+    async get_stats() {
+      const url = `https://totalminers.io/api/stats/alltime`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+
+      const data = {
+        user_id: this.id,
+      };
+      console.log(data);
+      try {
+        const response = await axios.post(url, data, { headers });
+        console.log(response);
+        this.total_hash = response.data.hash_rate;
+        this.energy_consumption = response.data.energy_consumption_kw;
+      } catch (error) {
+        console.error("Error uploading data:", error);
+      }
+    },
+    async get_balance() {
+      const url = `https://totalminers.io/api/miners/balance`;
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+
+      const data = {
+        user_id: this.id,
+        miner_id: this.id_miner,
+      };
+      try {
+        const response = await axios.post(url, data, { headers });
+        console.log(response);
+        this.client_balance = response.data.balance;
+      } catch (error) {
+        console.error("Error uploading data:", error);
+      }
+    },
   },
 
   mounted() {
@@ -484,6 +479,8 @@ export default {
       this.discount_getall();
       this.billings();
       this.getMails();
+      this.get_balance();
+      this.get_stats();
       // this.fetchJui();
     }, 1000);
   },
@@ -616,7 +613,7 @@ export default {
           <span class="info-value nocomp" v-else>Не пройден</span>
         </div>
         <div class="info-item">
-          <span class="info-title">Баланс клиента:</span>
+          <span class="info-title">Баланс клиента: {{ client_balance }} $</span>
         </div>
         <div class="info-item">
           <span class="info-title">Минимальная выплата:</span>
@@ -634,7 +631,7 @@ export default {
           <span class="info-value">Задерживает</span>
         </div>
         <div class="info-item">
-          <span class="info-title">Потребление с момента уплаты:</span>
+          <span class="info-title">Потребление за все время:</span>
           <span class="info-value">{{ energy_consumption }} Киловатт</span>
         </div>
         <div class="info-item">
@@ -767,6 +764,7 @@ export default {
           />
         </div>
       </div>
+
       <button class="btn save" @click="discount_new()">Сохранить</button>
     </div>
 
@@ -827,8 +825,67 @@ export default {
             />
           </div>
         </div>
-        <button class="btn save" @click="discount_update(discount.id)">Сохранить</button>
+        <div class="wrap-btns">
+          <button class="btn save" @click="discount_update(discount.id)">
+            Сохранить
+          </button>
+          <button class="btn delete" @click="discount_delete(discount.id)">
+            Удалить
+          </button>
+        </div>
       </div>
+    </div>
+    <div class="card settings-price" v-if="discounts.length != 0">
+      <h2>Индивидуальные настройки цены</h2>
+      <div class="wrap-group">
+        <div class="group">
+          <label for="category" class="group-value">Товар</label>
+          <select class="group-item" name="category" id="category" v-model="miner_id">
+            <option v-for="miner in miners" :key="miner.id" :value="miner.id">
+              {{ miner.name }}
+            </option>
+          </select>
+        </div>
+        <div class="group">
+          <label for="percent_sell" class="group-value">Процент скидки</label>
+          <input
+            type="text"
+            id="percent_sell"
+            name="percent_sell"
+            v-model="zxc"
+            class="group-item"
+            placeholder="Введите процент скидки"
+          />
+        </div>
+      </div>
+      <div class="wrap-group">
+        <div class="group">
+          <label for="price_energy" class="group-value"
+            >Цена электроэнергии за KW/час</label
+          >
+          <input
+            type="text"
+            id="price_energy"
+            name="price_energy"
+            v-model="qwe"
+            class="group-item"
+            placeholder="Введите цену электроэнергии"
+          />
+        </div>
+        <div class="group">
+          <label for="date" class="group-value">До</label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            v-model="date"
+            class="group-item"
+            placeholder="Действительно до"
+          />
+        </div>
+      </div>
+
+      <button class="btn save" @click="discount_new()">Создать</button>
     </div>
 
     <div class="card">
@@ -857,7 +914,7 @@ export default {
           />
         </div>
       </div>
-      <button class="btn save">Сохранить</button>
+      <button class="btn save" @click="update_password()">Сохранить</button>
     </div>
     <div class="card history">
       <h2>История покупок</h2>
@@ -935,8 +992,14 @@ export default {
       </div>
       <div class="group">
         <label for="status_mining" class="group-value">Состояние майнинга</label>
-        <select id="status_mining" class="group-item" v-model="status_mining">
-          <option value="">Включен</option>
+        <select
+          id="status_mining"
+          class="group-item"
+          v-model="status_mining"
+          @change="update_mining_state()"
+        >
+          <option value="true">Включен</option>
+          <option value="false">Выключен</option>
         </select>
       </div>
     </div>
@@ -954,7 +1017,10 @@ export default {
   transition: all 500ms ease;
   cursor: auto;
 }
-
+.wrap-btns {
+  display: flex;
+  justify-content: space-between;
+}
 .card:hover,
 .btn-action:hover {
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
